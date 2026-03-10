@@ -43,7 +43,7 @@ void set_torque_all(const char* cmd_suffix) {
 bool read_all_servos(int* buffer) {
   Serial.println(">>> 正在读取所有舵机位置...");
   bool success = true;
-  for (int i = 0; i < 6; i++) {
+  for (int i = 0; i < 5; i++) {
     // 调用主文件的读取函数，超时100ms
     int pwm = read_servo_pwm(i, 100); 
     if (pwm < 0) {
@@ -179,7 +179,7 @@ void loop_teach_record() {
           delay(500);
 
           Serial.println(">>> 1. 移动到起点...");
-          for (int i = 0; i < 6; i++) {
+          for (int i = 0; i < 5; i++) {
             // 调用主文件的 set_servo, 设定时间 2000ms
             set_servo(i, final_start_pos[i], 2000); 
           }
@@ -187,7 +187,7 @@ void loop_teach_record() {
           delay(2500); 
 
           Serial.println(">>> 2. 移动到终点...");
-          for (int i = 0; i < 6; i++) {
+          for (int i = 0; i < 5; i++) {
             set_servo(i, final_end_pos[i], 2000);
           }
           delay(2500);
