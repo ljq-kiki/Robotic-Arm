@@ -105,3 +105,93 @@ export function createMockBridge(): IHardwareBridge {
     },
   }
 }
+
+export function createWebSocketBridge(url: string = 'ws://localhost:8080'): IHardwareBridge {
+  let ws: WebSocket | null = null;
+  let listener: ((data: HardwarePayload) => void) | null = null;
+
+  return {
+    async connectDevice() {
+      return new Promise((resolve, reject) => {
+        ws = new WebSocket(url);
+        
+        ws.onopen = () => {
+          console.log("[Bridge] Connected to Node Gateway");
+          listener?.({ type: 'status', status: { connection: 'connected' } });
+          resolve();
+        };
+
+        ws.onerror = (err) => {
+          console.error("[Bridge] Connection Error", err);
+          listener?.({ type: 'status', status: { connection: 'error' } });
+          reject(err);
+        };
+
+        ws.onclose = () => {
+          console.log("[Bridge] Disconnected");
+          listener?.({ type: 'status', status: { connection: 'disconnected' } });
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const msg = JSON.parse(event.data);
+            if (msg.type === 'robot_serial' && msg.data) {
+              const text = msg.data;
+              
+              // 魔法：在这里拦截并解析串口回传的坐标数据
+              // 匹配格式: X: 200.0 mm | Y: 150.0 mm | Z: 100.0 mm | Pitch: 0.0 deg
+              const coordMatch = text.match(/X:\s*([-\d.]+)\s*mm\s*\|\s*Y:\s*([-\d.]+)\s*mm\s*\|\s*Z:\s*([-\d.]+)\s*mm\s*\|\s*Pitch:\s*([-\d.]+)\s*deg/);
+              
+              if (coordMatch) {
+                listener?.({
+                  type: 'position',
+                  position: {
+                    x: coordMatch[1],
+                    y: coordMatch[2],
+                    z: coordMatch[3],
+                    rx: coordMatch[4] // 硬件侧的 Pitch 映射为 UI 的 Rx
+                  }
+                });
+              }
+            }
+          } catch(e) {
+            console.error("[Bridge] Parse error", e);
+          }
+        };
+      });
+    },
+
+    async disconnectDevice() {
+      if (ws) {
+        ws.close();
+        ws = null;
+      }
+    },
+
+    onDataReceived(callback: (data: HardwarePayload) => void) {
+      listener = callback;
+      return () => { listener = null; };
+    },
+
+    async getStatus(): Promise<DeviceStatus> {
+      return {
+        connection: ws?.readyState === WebSocket.OPEN ? 'connected' : 'disconnected'
+      };
+    },
+
+    async sendCommand(command: string) {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        // 兼容简易版后端的翻译逻辑，如果你想在前端直接发单词，这里做个拦截映射
+        const COMMAND_MAP: Record<string, string> = {
+          "UNLOCK": "U", "LOCK": "L", "FIXED_MOVE": "F", "TOGGLE_COORD": "K",
+          "TEACH_START": "C", "RECORD_START": "A", "RECORD_END": "B",
+          "CONFIRM": "Y", "CANCEL": "N", "AUTO_RUN": "V"
+        };
+        const mappedCmd = COMMAND_MAP[command] || command;
+        ws.send(mappedCmd);
+      } else {
+        console.warn("[Bridge] Cannot send command, socket not connected.");
+      }
+    }
+  };
+}
