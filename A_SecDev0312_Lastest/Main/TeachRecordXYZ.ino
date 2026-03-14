@@ -1,12 +1,13 @@
 // =================================================================================
 // File: TeachRecordXYZ.ino
-// Function: UI-Driven Teaching & Recording (Hardened against Bus Collisions)
+// Function: UI-Driven Teaching & Recording (Bulletproof Bus Collision Fix)
 // =================================================================================
 #include <math.h>
 
 extern int read_servo_pwm(uint8_t idx, uint32_t timeout_ms);
 extern void set_servo(int servo_index, int pwm_value, int move_time);
 extern void all_uart_send_str(char *str);
+extern HardwareSerial Serial1; // 【核心修复】暴露出底层串口，用于强制清空总线垃圾
 
 // 状态标志
 bool has_start = false;
@@ -25,7 +26,6 @@ void set_torque_all(const char* cmd_suffix) {
   all_uart_send_str(cmd);
 }
 
-// 打印特定点的 XYZ 坐标
 void print_xyz_from_pwm(int* pwm_array, const char* point_name) {
     float theta6 = (1500.0 - pwm_array[0]) * 270.0 / 2000.0;
     float theta5 = (pwm_array[1] - 1500.0) * 270.0 / 2000.0 + 90.0;
@@ -43,16 +43,27 @@ void print_xyz_from_pwm(int* pwm_array, const char* point_name) {
     Serial.print(" | Rx: "); Serial.print(alpha_deg, 1); Serial.println(" deg");
 }
 
-// 核心读取函数：带智能延时，防止与 U 指令的回传撞车
+// 核心读取函数：带智能延时、暴力清空和重试机制
 bool read_current_servos(int* buffer) {
   bool success = true;
+
   for (int i = 0; i < 5; i++) {
-    delay(20); // 【关键修复】每次读取前给串口总线20ms喘息时间
-    int pwm = read_servo_pwm(i, 150);
-    if (pwm < 0) {
-        delay(50); // 遇到拥堵，避让50ms再试
-        pwm = read_servo_pwm(i, 150);
+    int pwm = -1;
+    
+    // 赋予 3 次重试机会
+    for (int retry = 0; retry < 3; retry++) {
+      // 【关键修复】读取前，暴力清空底层硬件缓冲区里的乱码和冲突响应
+      while (Serial1.available() > 0) {
+        Serial1.read();
+      }
+      delay(30);
+
+      pwm = read_servo_pwm(i, 200); // 增加超时时间
+      if (pwm > 0) break; // 读取成功，跳出重试
+      
+      delay(100); // 如果失败，避让 100ms 等总线彻底安静
     }
+
     if (pwm < 0) {
       success = false;
       buffer[i] = 1500; 
@@ -60,6 +71,15 @@ bool read_current_servos(int* buffer) {
       buffer[i] = pwm;
     }
   }
+
+  // 【必须保留】以特定格式打印，确保前端网页的正则能够抓取到 "JointX="
+  if (success) {
+    for (int i = 0; i < 5; i++) {
+       Serial.print("Joint"); Serial.print(i); Serial.print("="); Serial.print(buffer[i]); Serial.print("  ");
+    }
+    Serial.println();
+  }
+
   return success;
 }
 
