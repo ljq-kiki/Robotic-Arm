@@ -1,0 +1,107 @@
+/**
+ * Bridge — 硬件与 UI 的中间层
+ * UI 只依赖本文件定义的接口；硬件层由 hardware/ 实现并注入。
+ * 开发阶段可用 createMockBridge() 用模拟数据跑通 UI。
+ */
+
+// --- 数据类型（由硬件层上报或 UI 下发）---
+
+/** 设备连接状态 */
+export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error'
+
+/** 点位数据（如 TCP 坐标、抓取点等） */
+export interface PointData {
+  x: string
+  y: string
+  z: string
+  rx: string
+}
+
+/** 设备状态快照（可选，用于状态栏等） */
+export interface DeviceStatus {
+  connection: ConnectionStatus
+  position?: PointData
+  lastError?: string
+}
+
+/** 硬件层上报的原始数据（按需扩展字段） */
+export interface HardwarePayload {
+  type: 'position' | 'status' | 'event'
+  position?: PointData
+  status?: Partial<DeviceStatus>
+  event?: string
+  [key: string]: unknown
+}
+
+// --- 硬件层必须实现的接口 ---
+
+export interface IHardwareBridge {
+  /** 连接设备 */
+  connectDevice(): Promise<void>
+
+  /** 断开连接 */
+  disconnectDevice(): Promise<void>
+
+  /** 注册“收到硬件数据”的回调，UI 在此更新状态 */
+  onDataReceived(callback: (data: HardwarePayload) => void): () => void
+
+  /** 获取当前连接状态与设备状态（可选） */
+  getStatus(): Promise<DeviceStatus>
+
+  /** 下发指令到硬件（如移动、记录点位等，按需扩展） */
+  sendCommand?(command: string, payload?: Record<string, unknown>): Promise<void>
+}
+
+// --- 模拟实现：便于先用模拟数据跑 UI ---
+
+export function createMockBridge(): IHardwareBridge {
+  let listener: ((data: HardwarePayload) => void) | null = null
+
+  const mockPoint = (): PointData => ({
+    x: '200.00',
+    y: '200.00',
+    z: '200.00',
+    rx: '200.00',
+  })
+
+  return {
+    async connectDevice() {
+      // 模拟连接成功后可推送一次状态
+      await new Promise((r) => setTimeout(r, 300))
+      listener?.({
+        type: 'status',
+        status: { connection: 'connected', position: mockPoint() },
+      })
+    },
+
+    async disconnectDevice() {
+      listener?.({
+        type: 'status',
+        status: { connection: 'disconnected' },
+      })
+    },
+
+    onDataReceived(callback: (data: HardwarePayload) => void) {
+      listener = callback
+      return () => {
+        listener = null
+      }
+    },
+
+    async getStatus(): Promise<DeviceStatus> {
+      return {
+        connection: 'connected',
+        position: mockPoint(),
+      }
+    },
+
+    async sendCommand(command: string, payload?: Record<string, unknown>) {
+      if (command === 'recordPosition') {
+        listener?.({
+          type: 'position',
+          position: payload as unknown as PointData,
+        })
+      }
+    },
+  }
+}
