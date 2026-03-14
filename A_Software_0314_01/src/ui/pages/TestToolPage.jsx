@@ -1,4 +1,224 @@
-import React, { useState, useEffect } from 'react'
+// import React, { useState, useEffect } from 'react'
+// import { PageLayout } from '../components/PageLayout.jsx'
+// import { PixelCard } from '../components/PixelCard.jsx'
+// import { PixelButton } from '../components/PixelButton.jsx'
+// import { StepBar } from '../components/StepBar.jsx'
+// import { PixelSelect } from '../components/PixelSelect.jsx'
+// import { PixelInput } from '../components/PixelInput.jsx'
+// import { PixelToast } from '../components/PixelToast.jsx'
+// import { PixelRadio } from '../components/PixelRadio.jsx'
+
+// const steps = [
+//   {
+//     id: 'step-1',
+//     status: 'done',
+//     position: 'first',
+//     label: '',
+//     title: 'INSTALL',
+//   },
+//   {
+//     id: 'step-2',
+//     status: 'active',
+//     position: 'middle',
+//     label: '',
+//     title: 'TEST',
+//   },
+//   {
+//     id: 'step-3',
+//     status: 'pending_3',
+//     position: 'middle',
+//     label: '',
+//     title: 'ASSEMBLY',
+//   },
+//   {
+//     id: 'step-4',
+//     status: 'pending_4',
+//     position: 'last',
+//     label: '',
+//     title: 'EXECUTE',
+//   },
+// ]
+
+// export default function TestToolPage({ onStartGame }) {
+//   const [status, setStatus] = useState('idle') // idle | running | error | success
+//   const [showToast, setShowToast] = useState(false)
+//   const [showHintModal, setShowHintModal] = useState(false)
+//   const [selectedOption, setSelectedOption] = useState(null)
+//   const [selectedTool, setSelectedTool] = useState('Flange')
+
+//   const isRunning = status === 'running'
+//   const hasError = status === 'error'
+//   const isSuccess = status === 'success'
+
+//   const handleTestClick = () => {
+//     setStatus('running')
+//     window.setTimeout(() => {
+//       if (selectedTool === 'Tool 1') {
+//         setStatus('success')
+//         setShowToast(false)
+//       } else {
+//         setStatus('error')
+//         setShowToast(true)
+//       }
+//     }, 2000)
+//   }
+
+//   useEffect(() => {
+//     if (!showToast) return
+//     const id = window.setTimeout(() => {
+//       setShowToast(false)
+//     }, 3000)
+//     return () => window.clearTimeout(id)
+//   }, [showToast])
+
+//   return (
+//     <PageLayout>
+//       <div className="flex items-center justify-between shrink-0 mb-10">
+//         <div className="px text-[24px]" style={{ color: 'var(--panel)' }}>
+//           Lion Model Assembly Game
+//         </div>
+//         <div className="flex gap-3">
+//           <div className="swatch" style={{ background: 'var(--bgPurple)' }} />
+//           <div className="swatch" style={{ background: 'var(--orange)' }} />
+//           <div className="swatch" style={{ background: 'var(--magenta)' }} />
+//         </div>
+//       </div>
+
+//       <StepBar steps={steps} />
+
+//       <PixelToast
+//         open={hasError && showToast}
+//         icon="⚠"
+//         message="Collision occurred! Try to solve it"
+//       />
+
+//       <div className="grid lg:grid-cols-2 gap-8 flex-1 min-h-0">
+//         <PixelCard
+//           padding="p-6"
+//           className="min-h-0 max-h-full flex flex-col overflow-hidden"
+//         >
+//           <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-4">
+//             <div
+//               className="px text-[13px]"
+//               style={{ color: 'var(--magenta)' }}
+//             >
+//               Check your tool, pick up the teddy bear, and complete the tool test to
+//               begin the game.
+//             </div>
+
+//             <div className="flex flex-col gap-3">
+//               {/* Tool + Payload 两列布局，每列内部是“标题在上，输入在下” */}
+//               <div className="grid grid-cols-2 gap-4">
+//                 <PixelSelect
+//                   className="w-full"
+//                   label="TOOL"
+//                   value={selectedTool}
+//                   onChange={(value) => setSelectedTool(value)}
+//                   options={[
+//                     { value: 'Flange', label: 'Flange' },
+//                     { value: 'Tool 1', label: 'Tool 1' },
+//                     { value: 'Gripper', label: 'Gripper' },
+//                     { value: 'Welder', label: 'Welder' },
+//                   ]}
+//                 />
+//                 <PixelInput
+//                   label="PAYLOAD"
+//                   defaultValue="-"
+//                   className="w-full"
+//                 />
+//               </div>
+
+//               <div className="mt-1">
+//                 <div className="px text-[12px] mb-1">TCP</div>
+//                 <div className="grid grid-cols-4 gap-3">
+//                   {[
+//                     { axis: 'X', value: '200.00' },
+//                     { axis: 'Y', value: '100.00' },
+//                     { axis: 'Z', value: '200.00' },
+//                     { axis: 'Rx', value: '0.00' },
+//                   ].map(({ axis, value }) => (
+//                     <div key={axis} className="flex items-center gap-1">
+//                       <div className="px text-[12px]">{axis}</div>
+//                       <PixelInput
+//                         className="w-full max-w-[96px]"
+//                         defaultValue={value}
+//                       />
+//                     </div>
+//                   ))}
+//                 </div>
+//               </div>
+//             </div>
+
+//             <div
+//               className="mt-4 pixel-card soft-grid"
+//               style={{
+//                 background: 'var(--panel)',
+//                 minHeight: '180px',
+//               }}
+//             >
+//               <div className="w-full h-full flex items-center justify-center">
+//                 <div className="text-center">
+//                   <div className="px text-[12px] mb-2">GIF PLACEHOLDER</div>
+//                   <div className="text-[10px]" style={{ color: 'var(--muted)' }}>
+//                     Grab the teddy bear · Highlight the TCP
+//                   </div>
+//                 </div>
+//               </div>
+//             </div>
+
+//             <div className="flex-1" />
+
+//             <div className="shrink-0 mt-4 w-full">
+//               {isRunning ? (
+//                 <div
+//                   className="w-full"
+//                   style={{
+//                     borderRadius: '9999px',
+//                     border: '2px solid var(--ink)',
+//                     background: 'var(--panel)',
+//                     overflow: 'hidden',
+//                     height: '40px',
+//                     display: 'flex',
+//                     alignItems: 'center',
+//                     justifyContent: 'center',
+//                     position: 'relative',
+//                   }}
+//                 >
+//                   <div
+//                     className="running-bar"
+//                     style={{
+//                       height: '100%',
+//                       width: '60%',
+//                       background: '#A5FFB5',
+//                       position: 'absolute',
+//                       left: 0,
+//                       top: 0,
+//                       bottom: 0,
+//                     }}
+//                   >
+//                   </div>
+//                   <span
+//                     className="px text-[13px]"
+//                     style={{ color: 'var(--ink)', position: 'relative', zIndex: 1 }}
+//                   >
+//                     Running...
+//                   </span>
+//                 </div>
+//               ) : (
+//                 <PixelButton
+//                   variant="magenta"
+//                   className="w-full py-4 text-[12px]"
+//                   onClick={isSuccess && onStartGame ? onStartGame : handleTestClick}
+//                   icon={isSuccess ? '🎉' : undefined}
+//                 >
+//                   {isSuccess ? 'Start Game !' : hasError ? 'TEST AGAIN' : 'TEST'}
+//                 </PixelButton>
+//               )}
+//             </div>
+//           </div>
+//         </PixelCard>
+
+import React, { useState, useEffect, useRef } from 'react'
 import { PageLayout } from '../components/PageLayout.jsx'
 import { PixelCard } from '../components/PixelCard.jsx'
 import { PixelButton } from '../components/PixelButton.jsx'
@@ -7,52 +227,70 @@ import { PixelSelect } from '../components/PixelSelect.jsx'
 import { PixelInput } from '../components/PixelInput.jsx'
 import { PixelToast } from '../components/PixelToast.jsx'
 import { PixelRadio } from '../components/PixelRadio.jsx'
+// 引入刚刚写好的真实 WebSocket Bridge
+import { createWebSocketBridge } from '../../services/Bridge.ts' 
 
 const steps = [
-  {
-    id: 'step-1',
-    status: 'done',
-    position: 'first',
-    label: '',
-    title: 'INSTALL',
-  },
-  {
-    id: 'step-2',
-    status: 'active',
-    position: 'middle',
-    label: '',
-    title: 'TEST',
-  },
-  {
-    id: 'step-3',
-    status: 'pending_3',
-    position: 'middle',
-    label: '',
-    title: 'ASSEMBLY',
-  },
-  {
-    id: 'step-4',
-    status: 'pending_4',
-    position: 'last',
-    label: '',
-    title: 'EXECUTE',
-  },
+  { id: 'step-1', status: 'done', position: 'first', label: '', title: 'INSTALL' },
+  { id: 'step-2', status: 'active', position: 'middle', label: '', title: 'TEST' },
+  { id: 'step-3', status: 'pending_3', position: 'middle', label: '', title: 'ASSEMBLY' },
+  { id: 'step-4', status: 'pending_4', position: 'last', label: '', title: 'EXECUTE' },
 ]
 
 export default function TestToolPage({ onStartGame }) {
-  const [status, setStatus] = useState('idle') // idle | running | error | success
+  const [status, setStatus] = useState('idle')
   const [showToast, setShowToast] = useState(false)
   const [showHintModal, setShowHintModal] = useState(false)
   const [selectedOption, setSelectedOption] = useState(null)
   const [selectedTool, setSelectedTool] = useState('Flange')
 
+  // === 新增：保存实时坐标的状态 ===
+  const [coords, setCoords] = useState({ x: '0.00', y: '0.00', z: '0.00', rx: '0.00' })
+  const bridgeRef = useRef(null)
+
   const isRunning = status === 'running'
   const hasError = status === 'error'
   const isSuccess = status === 'success'
 
+  // === 新增：组件挂载时连接硬件 ===
+  useEffect(() => {
+    // 实例化 WebSocket 桥接器
+    const bridge = createWebSocketBridge();
+    bridgeRef.current = bridge;
+
+    // 订阅数据流，一旦解析到坐标数据就更新状态
+    const unsubscribe = bridge.onDataReceived((payload) => {
+      if (payload.type === 'position' && payload.position) {
+        setCoords(payload.position);
+      }
+    });
+
+    // 发起连接
+    bridge.connectDevice().catch((err) => console.error("Hardware connection failed:", err));
+
+    // 组件卸载时断开连接
+    return () => {
+      unsubscribe();
+      bridge.disconnectDevice();
+    };
+  }, []);
+
   const handleTestClick = () => {
     setStatus('running')
+    
+    // === 新增：触发硬件动作 ===
+    if (bridgeRef.current) {
+      bridgeRef.current.sendCommand('FIXED_MOVE'); // 发送 'F'，触发定点移动
+      bridgeRef.current.sendCommand('TOGGLE_COORD'); // 发送 'K'，打开坐标实时回传流
+    }
+
+    // 模拟等待硬件走完流程 (机械臂大概需要几秒钟走完，为了演示我们拉长一点让坐标能飞一会)
     window.setTimeout(() => {
+      // 动作结束后，可以再发一次 'K' 关闭坐标回传，节省串口资源
+      if (bridgeRef.current) {
+        bridgeRef.current.sendCommand('TOGGLE_COORD'); 
+      }
+
       if (selectedTool === 'Tool 1') {
         setStatus('success')
         setShowToast(false)
@@ -60,7 +298,7 @@ export default function TestToolPage({ onStartGame }) {
         setStatus('error')
         setShowToast(true)
       }
-    }, 2000)
+    }, 6000) // 这里定 6 秒，足够观察 XYZ 数据疯狂跳变
   }
 
   useEffect(() => {
@@ -107,7 +345,6 @@ export default function TestToolPage({ onStartGame }) {
             </div>
 
             <div className="flex flex-col gap-3">
-              {/* Tool + Payload 两列布局，每列内部是“标题在上，输入在下” */}
               <div className="grid grid-cols-2 gap-4">
                 <PixelSelect
                   className="w-full"
@@ -131,17 +368,19 @@ export default function TestToolPage({ onStartGame }) {
               <div className="mt-1">
                 <div className="px text-[12px] mb-1">TCP</div>
                 <div className="grid grid-cols-4 gap-3">
+                  {/* === 修改：将 defaultValue 替换为受控的 value，让数据动起来 === */}
                   {[
-                    { axis: 'X', value: '200.00' },
-                    { axis: 'Y', value: '100.00' },
-                    { axis: 'Z', value: '200.00' },
-                    { axis: 'Rx', value: '0.00' },
+                    { axis: 'X', value: coords.x },
+                    { axis: 'Y', value: coords.y },
+                    { axis: 'Z', value: coords.z },
+                    { axis: 'Rx', value: coords.rx },
                   ].map(({ axis, value }) => (
                     <div key={axis} className="flex items-center gap-1">
                       <div className="px text-[12px]">{axis}</div>
                       <PixelInput
                         className="w-full max-w-[96px]"
-                        defaultValue={value}
+                        value={value}
+                        readOnly // 配置为只读，避免用户手动篡改硬件数据
                       />
                     </div>
                   ))}
@@ -217,6 +456,8 @@ export default function TestToolPage({ onStartGame }) {
             </div>
           </div>
         </PixelCard>
+
+    
 
         <PixelCard
           title="3D ROBOT MODEL"
