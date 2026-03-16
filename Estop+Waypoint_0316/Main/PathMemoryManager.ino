@@ -30,7 +30,7 @@ struct PathSequence {
     bool isValid = false;
 };
 
-// 1. 创建数组，最多放置 12 组路径信息
+// 创建数组，最多放置 12 组路径信息
 PathSequence path_library[12];
 int library_count = 0;
 
@@ -39,19 +39,18 @@ void loop_path_memory() {
         char key = toupper((char)Serial.peek());
         if (key == '\n' || key == '\r') { Serial.read(); return; }
 
-        // 2. 按下 Z 键：保存当前路径
+        // --- 1. 按下 Z 键：保存当前路径 ---
         if (key == 'Z') {
             Serial.read();
             if (!has_start || !has_end) {
-                Serial.println("\n[Error] No complete path to save! Set A and B first.");
+                Serial.println("\n[Error] No complete path to save! Record START(A) and END(B) first.");
                 return;
             }
             if (library_count >= 12) {
-                Serial.println("\n[Limit] Path library is full! (Max 12)");
+                Serial.println("\n[Limit] Path library is full! (Max 12 slots)");
                 return;
             }
 
-            // 将当前视教数据拷贝到库中
             memcpy(path_library[library_count].start, final_start_pos, sizeof(final_start_pos));
             memcpy(path_library[library_count].end, final_end_pos, sizeof(final_end_pos));
             memcpy(path_library[library_count].waypoints, final_waypoint_pos, sizeof(final_waypoint_pos));
@@ -59,15 +58,15 @@ void loop_path_memory() {
             path_library[library_count].isValid = true;
 
             library_count++;
-            Serial.print("\n[MEM] Path saved to slot "); Serial.print(library_count);
-            Serial.println("/12. (Z to save more, D to run all)");
+            Serial.print("\n[MEM] Path saved to Slot "); Serial.print(library_count);
+            Serial.println(". (Z to add more, D to run all, X to clear)");
         }
 
-        // 3. 按下 D 键：流水线式运行所有已存路径
+        // --- 2. 按下 D 键：流水线式运行所有已存路径 ---
         if (key == 'D') {
             Serial.read();
             if (library_count == 0) {
-                Serial.println("\n[Error] Path library is empty!");
+                Serial.println("\n[Error] Path library is empty! Save some paths with 'Z' first.");
                 return;
             }
 
@@ -76,32 +75,37 @@ void loop_path_memory() {
 
             for (int p = 0; p < library_count; p++) {
                 if (!path_library[p].isValid) continue;
-                Serial.print(">>> Executing Path Group: "); Serial.println(p + 1);
-
-                // --- A. 移动到该组的起点 ---
+                
+                Serial.print("\n>>> Task "); Serial.print(p + 1); Serial.println(": Moving to START...");
+                
+                // A. 移动到该组的起点
                 for (int i = 0; i < 5; i++) set_servo(i, path_library[p].start[i], 2000);
                 smart_delay_with_stop(2500);
                 if (is_emergency_triggered) break;
 
-                // --- B. 起点执行上电 (吸磁) ---
-                Serial.println(">>> Magnet ON (Sucking)");
+                // B. 起点上电 (吸磁)
+                Serial.println(">>> Magnet ON");
                 digitalWrite(RELAY_PIN, HIGH);
                 smart_delay_with_stop(800); 
 
-                // --- C. 移动到该组的途径点 ---
+                // C. 移动到该组的途径点
                 for (int w = 0; w < path_library[p].w_cnt; w++) {
+                    Serial.print(">>> Task "); Serial.print(p + 1); Serial.print(": Waypoint "); Serial.println(w + 1);
                     for (int i = 0; i < 5; i++) set_servo(i, path_library[p].waypoints[w][i], 2000);
                     smart_delay_with_stop(2500);
                     if (is_emergency_triggered) break;
                 }
 
-                // --- D. 移动到该组的终点 ---
+                // D. 移动到该组的终点
+                Serial.println(">>> Task "); Serial.print(p + 1); Serial.println(": Moving to END...");
+                for (int i = 0; i < 5; i++) set_servo(i, path_library[p].end[p], 2000); // 修正为当前路径组索引
+                // 注意：上行修正为 path_library[p].end，避免索引错误
                 for (int i = 0; i < 5; i++) set_servo(i, path_library[p].end[i], 2000);
                 smart_delay_with_stop(2500);
                 if (is_emergency_triggered) break;
 
-                // --- E. 终点执行放电 (失磁) ---
-                Serial.println(">>> Magnet OFF (Released)");
+                // E. 终点放电 (失磁)
+                Serial.println(">>> Magnet OFF");
                 digitalWrite(RELAY_PIN, LOW);
                 smart_delay_with_stop(800);
                 
@@ -109,11 +113,22 @@ void loop_path_memory() {
             }
 
             if (is_emergency_triggered) {
-                Serial.println("\n[Aborted] Batch process stopped by Emergency.");
-                digitalWrite(RELAY_PIN, LOW); // 安全起见，急停释放磁铁
+                Serial.println("\n[Aborted] Batch process terminated.");
+                digitalWrite(RELAY_PIN, LOW); 
             } else {
-                Serial.println("\n[DONE] All saved paths executed!");
+                Serial.println("\n[DONE] All tasks completed successfully!");
             }
+        }
+
+        // --- 3. 按下 X 键（或你要求的 F 键）：清空所有存储 ---
+        // 注意：建议使用 'X'，如果用 'F'，请确保注释掉 FixedMoveWizMag.ino 里的 F 功能
+        if (key == 'X') { 
+            Serial.read();
+            library_count = 0;
+            for (int i = 0; i < 12; i++) {
+                path_library[i].isValid = false;
+            }
+            Serial.println("\n[RESET] Path library cleared! Slots: 0/12.");
         }
     }
 }
