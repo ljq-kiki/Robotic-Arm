@@ -19,6 +19,13 @@ export default function TestToolPage({ onStartGame }) {
 
   const hasError = status === 'error'
   const isSuccess = status === 'success'
+  const connectionInfo = `${
+    hardware.connection === 'connected'
+      ? 'Connected'
+      : hardware.connection === 'error'
+        ? 'Error'
+        : 'Disconnected'
+  } · ${hardware.source === 'hardware' ? 'Real' : 'Virtual'}`
 
   useEffect(() => {
     const cleanupHardware = initializeHardwareStore()
@@ -71,11 +78,7 @@ export default function TestToolPage({ onStartGame }) {
   return (
     <TestToolPageView
       coords={hardware.coords}
-      connectionLabel={
-        hardware.connection === 'connected' ? 'Mock connected' : 'Disconnected'
-      }
-      temperatureLabel={`${hardware.temperature.toFixed(1)} C`}
-      sourceLabel="Mock telemetry"
+      connectionInfo={connectionInfo}
       isRunning={hardware.isRunning}
       hasError={hasError}
       isSuccess={isSuccess}

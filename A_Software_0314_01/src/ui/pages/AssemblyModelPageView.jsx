@@ -16,14 +16,6 @@ const steps = [
   { id: 'step-4', status: 'pending_4', position: 'last', label: '', title: 'EXECUTE' },
 ]
 
-function TelemetryBadge({ label, value }) {
-  return (
-    <div className="assembly-badge px-3 py-2 text-[11px]">
-      <span className="px">{label}</span>: {value}
-    </div>
-  )
-}
-
 function JogAxisControl({ label, onNegative, onPositive }) {
   return (
     <div className="assembly-jog-control flex items-center">
@@ -359,8 +351,7 @@ export function AssemblyModelPageView({
   successPrimaryLabel,
   jogFrame,
   hasSingularityWarning,
-  hardwareStatusLabel,
-  temperatureLabel,
+  connectionInfo,
   onToggleMode,
   onConfirmTest,
   onNextBlock,
@@ -393,7 +384,10 @@ export function AssemblyModelPageView({
         <div className="assembly-page-title px text-[24px]">
           Lion Model Assembly Game
         </div>
-        <div className="flex gap-3">
+        <div className="flex items-center gap-3">
+          <div className="connection-pill px text-[9px] px-2 py-2">
+            {connectionInfo}
+          </div>
           <div className="swatch" style={{ background: 'var(--bgPurple)' }} />
           <div className="swatch" style={{ background: 'var(--orange)' }} />
           <div className="swatch" style={{ background: 'var(--magenta)' }} />
@@ -408,7 +402,7 @@ export function AssemblyModelPageView({
         message="Collision occurred! Try to solve it"
       />
 
-      <div className="grid lg:grid-cols-2 gap-8 flex-1 min-h-0 max-lg:grid-rows-[minmax(0,1fr)_minmax(0,1fr)]">
+      <div className="grid lg:grid-cols-[4fr_3fr] gap-8 flex-1 min-h-0 max-lg:grid-rows-[minmax(0,1fr)_minmax(0,1fr)]">
         <PixelCard
           padding="p-6"
           className="min-h-0 max-h-full flex flex-col overflow-hidden"
@@ -426,12 +420,6 @@ export function AssemblyModelPageView({
                 first block.
               </div>
             )}
-
-            <div className="flex flex-wrap gap-3">
-              <TelemetryBadge label="Source" value="Mock telemetry" />
-              <TelemetryBadge label="Status" value={hardwareStatusLabel} />
-              <TelemetryBadge label="Temp" value={temperatureLabel} />
-            </div>
 
             {showJoggingPanel ? (
               <div

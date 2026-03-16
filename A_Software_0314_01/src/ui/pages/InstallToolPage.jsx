@@ -1,9 +1,10 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { PageLayout } from '../components/PageLayout.jsx'
 import { PixelCard } from '../components/PixelCard.jsx'
 import { PixelButton } from '../components/PixelButton.jsx'
 import { StepBar } from '../components/StepBar.jsx'
 import { InlineStep } from '../components/InlineStep.jsx'
+import { initializeHardwareStore, useHardwareStore } from '../../services/useHardwareStore.ts'
 
 const steps = [
   {
@@ -37,6 +38,20 @@ const steps = [
 ]
 
 export default function InstallToolPage({ onInstalled }) {
+  const hardware = useHardwareStore()
+  const connectionInfo = `${
+    hardware.connection === 'connected'
+      ? 'Connected'
+      : hardware.connection === 'error'
+        ? 'Error'
+        : 'Disconnected'
+  } · ${hardware.source === 'hardware' ? 'Real' : 'Virtual'}`
+
+  useEffect(() => {
+    const cleanup = initializeHardwareStore()
+    return cleanup
+  }, [])
+
   const handleInstalledClick = () => {
     if (typeof onInstalled === 'function') {
       onInstalled()
@@ -49,7 +64,10 @@ export default function InstallToolPage({ onInstalled }) {
           <div className="px text-[24px]" style={{ color: 'var(--panel)' }}>
             Lion Model Assembly Game
           </div>
-          <div className="flex gap-3">
+          <div className="flex items-center gap-3">
+            <div className="connection-pill px text-[9px] px-2 py-2">
+              {connectionInfo}
+            </div>
             <div className="swatch" style={{ background: 'var(--bgPurple)' }} />
             <div className="swatch" style={{ background: 'var(--orange)' }} />
             <div className="swatch" style={{ background: 'var(--magenta)' }} />
@@ -58,7 +76,7 @@ export default function InstallToolPage({ onInstalled }) {
 
         <StepBar steps={steps} />
 
-        <div className="grid lg:grid-cols-2 gap-8 flex-1 min-h-0 max-lg:grid-rows-[minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="grid lg:grid-cols-[4fr_3fr] gap-8 flex-1 min-h-0 max-lg:grid-rows-[minmax(0,1fr)_minmax(0,1fr)]">
           <PixelCard
             padding="p-6"
             className="min-h-0 max-h-full flex flex-col overflow-hidden"

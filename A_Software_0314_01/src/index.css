@@ -95,6 +95,17 @@ body{
   box-shadow: 3px 3px 0 var(--shadow);
 }
 
+.connection-pill {
+  border: 2px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--shadow);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink);
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
 /* Stat 参数块（像素风计数牌） */
 .stat{
   border-radius: 8px;

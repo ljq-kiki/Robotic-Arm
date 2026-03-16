@@ -32,19 +32,6 @@ const hintOptions = [
   },
 ]
 
-function HardwareBadge({ label, value, tone = 'default' }) {
-  const accentClass =
-    tone === 'accent' ? 'testtool-hardware-badge-accent' : ''
-
-  return (
-    <div
-      className={`testtool-hardware-badge px-3 py-2 text-[11px] ${accentClass}`}
-    >
-      <span className="px">{label}</span>: {value}
-    </div>
-  )
-}
-
 function HintModal({
   selectedOption,
   onSelectOption,
@@ -156,9 +143,7 @@ function HintModal({
 
 export function TestToolPageView({
   coords,
-  connectionLabel,
-  temperatureLabel,
-  sourceLabel,
+  connectionInfo,
   isRunning,
   hasError,
   isSuccess,
@@ -181,7 +166,10 @@ export function TestToolPageView({
         <div className="testtool-page-title px text-[24px]">
           Lion Model Assembly Game
         </div>
-        <div className="flex gap-3">
+        <div className="flex items-center gap-3">
+          <div className="connection-pill px text-[9px] px-2 py-2">
+            {connectionInfo}
+          </div>
           <div className="swatch testtool-swatch-purple" />
           <div className="swatch testtool-swatch-orange" />
           <div className="swatch testtool-swatch-magenta" />
@@ -196,7 +184,7 @@ export function TestToolPageView({
         message="Collision occurred! Try to solve it"
       />
 
-      <div className="grid lg:grid-cols-2 gap-8 flex-1 min-h-0">
+      <div className="grid lg:grid-cols-[4fr_3fr] gap-8 flex-1 min-h-0">
         <PixelCard
           padding="p-6"
           className="min-h-0 max-h-full flex flex-col overflow-hidden"
@@ -205,12 +193,6 @@ export function TestToolPageView({
             <div className="testtool-intro px text-[13px]">
               Check your tool, pick up the teddy bear, and complete the tool test to
               begin the game.
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              <HardwareBadge label="Source" value={sourceLabel} tone="accent" />
-              <HardwareBadge label="Status" value={connectionLabel} />
-              <HardwareBadge label="Temp" value={temperatureLabel} />
             </div>
 
             <div className="flex flex-col gap-3">
