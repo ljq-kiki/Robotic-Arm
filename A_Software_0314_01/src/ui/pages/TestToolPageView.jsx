@@ -189,7 +189,7 @@ export function TestToolPageView({
           padding="p-6"
           className="min-h-0 max-h-full flex flex-col overflow-hidden"
         >
-          <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-4">
+          <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-4 pr-6 pb-6">
             <div className="testtool-intro px text-[13px]">
               Check your tool, pick up the teddy bear, and complete the tool test to
               begin the game.
@@ -214,17 +214,17 @@ export function TestToolPageView({
 
               <div className="mt-1">
                 <div className="px text-[12px] mb-1">TCP</div>
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-4 gap-6">
                   {[
                     { axis: 'X', value: coords.x },
                     { axis: 'Y', value: coords.y },
                     { axis: 'Z', value: coords.z },
                     { axis: 'Rx', value: coords.rx },
                   ].map(({ axis, value }) => (
-                    <div key={axis} className="flex items-center gap-1">
+                    <div key={axis} className="flex items-center gap-2 min-w-0">
                       <div className="px text-[12px]">{axis}</div>
                       <PixelInput
-                        className="w-full max-w-[96px]"
+                        className="flex-1 min-w-0"
                         value={value}
                         readOnly
                       />

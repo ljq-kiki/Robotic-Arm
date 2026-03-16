@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
 import {
+  HARDWARE_SIGNALS,
   initializeHardwareStore,
+  subscribeHardwareSignal,
   startFixedMoveTest,
   useHardwareStore,
 } from '../../services/useHardwareStore.ts'
@@ -16,6 +18,8 @@ export default function TestToolPage({ onStartGame }) {
   const [selectedOption, setSelectedOption] = useState(null)
   const [selectedTool, setSelectedTool] = useState('Flange')
   const resultTimerRef = useRef(null)
+  const waitingHardwareResultRef = useRef(false)
+  const selectedToolRef = useRef(selectedTool)
 
   const hasError = status === 'error'
   const isSuccess = status === 'success'
@@ -28,10 +32,33 @@ export default function TestToolPage({ onStartGame }) {
   } · ${hardware.source === 'hardware' ? 'Real' : 'Virtual'}`
 
   useEffect(() => {
+    selectedToolRef.current = selectedTool
+  }, [selectedTool])
+
+  useEffect(() => {
     const cleanupHardware = initializeHardwareStore()
+    const unsubscribeSignal = subscribeHardwareSignal((signal) => {
+      if (!waitingHardwareResultRef.current) return
+      if (signal !== HARDWARE_SIGNALS.TEST_TOOL_RUN_FINISHED) return
+
+      waitingHardwareResultRef.current = false
+      if (resultTimerRef.current !== null) {
+        window.clearTimeout(resultTimerRef.current)
+        resultTimerRef.current = null
+      }
+
+      if (selectedToolRef.current === 'Tool 1') {
+        setStatus('success')
+        return
+      }
+      setStatus('error')
+      setShowToast(true)
+    })
 
     return () => {
       cleanupHardware()
+      unsubscribeSignal()
+      waitingHardwareResultRef.current = false
 
       if (resultTimerRef.current !== null) {
         window.clearTimeout(resultTimerRef.current)
@@ -55,17 +82,26 @@ export default function TestToolPage({ onStartGame }) {
     setStatus('idle')
     setShowToast(false)
     setShowHintModal(false)
-    //startMockRun(RUN_DURATION_MS)
-    startFixedMoveTest(RUN_DURATION_MS) // <-- 改为调用我们写的方法
+    waitingHardwareResultRef.current = false
+    startFixedMoveTest(RUN_DURATION_MS)
 
     if (resultTimerRef.current !== null) {
       window.clearTimeout(resultTimerRef.current)
     }
 
+    const isRealHardwarePath =
+      hardware.source === 'hardware' && hardware.connection === 'connected'
+
+    if (isRealHardwarePath) {
+      // Real hardware path: prefer hardware completion signal.
+      waitingHardwareResultRef.current = true
+    }
+
     resultTimerRef.current = window.setTimeout(() => {
       resultTimerRef.current = null
-
-      if (selectedTool === 'Tool 1') {
+      // Fallback for mock mode, and also safety fallback if hardware signal is missing.
+      waitingHardwareResultRef.current = false
+      if (selectedToolRef.current === 'Tool 1') {
         setStatus('success')
         return
       }

@@ -7,7 +7,7 @@ export function PixelSelect({
   defaultValue,
   onChange,
   className = '',
-  variant = 'default', // default | flat
+  variant = 'default', // default | flat | plain
 }) {
   const [open, setOpen] = useState(false)
   const [internalValue, setInternalValue] = useState(
@@ -40,20 +40,20 @@ export function PixelSelect({
         <button
           type="button"
           onClick={() => setOpen((prev) => !prev)}
-          className="w-full block text-left"
+          className="w-full flex items-center justify-between text-left"
           style={{
             border: '2px solid var(--ink)',
-            boxShadow: variant === 'flat' ? 'none' : '4px 4px 0 var(--shadow)',
+            boxShadow: variant === 'default' ? '4px 4px 0 var(--shadow)' : 'none',
             background: 'var(--panel)',
-            height: variant === 'flat' ? '30px' : '40px',
-            padding: '0 12px',
-            borderRadius: variant === 'flat' ? '4px' : '0px',
+            height: variant === 'default' ? '40px' : '30px',
+            padding: '0 10px',
+            borderRadius: variant === 'default' ? '0px' : '4px',
           }}
         >
-          <span className="text-[12px]">
+          <span className="text-[12px] leading-none truncate">
             {selected ? selected.label : ''}
           </span>
-          <span className="text-[10px]" style={{ float: 'right' }}>
+          <span className="text-[10px] leading-none ml-2 shrink-0">
             ▼
           </span>
         </button>
@@ -62,8 +62,10 @@ export function PixelSelect({
             className="absolute left-0 right-0 mt-1 z-30"
             style={{
               border: '2px solid var(--ink)',
-              boxShadow: '4px 4px 0 var(--shadow)',
+              boxShadow: variant === 'default' ? '4px 4px 0 var(--shadow)' : 'none',
               background: 'var(--panel)',
+              borderRadius: variant === 'default' ? '0px' : '4px',
+              overflow: 'hidden',
             }}
           >
             {options.map((opt) => (
