@@ -13,6 +13,7 @@ const EMPTY_POINT = { x: '', y: '', z: '', rx: '' }
 const ASSEMBLY_RUN_MS = 5000
 const COLLISION_SIGNAL_MS = 2200
 const SINGULARITY_SIGNAL_MS = 2500
+const MAX_WAYPOINTS = 2
 const REFERENCE_FRAME_OPTIONS = [
   { value: 'Base', label: 'Base' },
   { value: 'Flange', label: 'Flange' },
@@ -100,6 +101,7 @@ export default function AssemblyModelPage({ onGoExecution }) {
   }
 
   const handleAddWaypoint = () => {
+    if (waypoints.length >= MAX_WAYPOINTS) return
     const currentPoint = captureCurrentPoint()
     setWaypoints((prev) => [
       ...prev,
@@ -285,6 +287,14 @@ export default function AssemblyModelPage({ onGoExecution }) {
     handleNextBlock()
   }
 
+  const handleTryAgainCurrentBlock = () => {
+    setShowSuccessModal(false)
+    setHasCollision(false)
+    setShowCollisionToast(false)
+    setShowCollisionHintModal(false)
+    setSelectedCollisionOption(null)
+  }
+
   const handleJogMove = async (axis, direction) => {
     const distance = axis === 'rx' ? 5 : 10
     await sendMockJogMove({
@@ -328,6 +338,7 @@ export default function AssemblyModelPage({ onGoExecution }) {
       onConfirmTest={handleConfirmTest}
       onNextBlock={handleNextBlock}
       onSuccessPrimaryAction={handleSuccessPrimaryAction}
+      onTryAgainCurrentBlock={handleTryAgainCurrentBlock}
       onOpenCollisionHint={() => setShowCollisionHintModal(true)}
       onCloseCollisionHint={() => {
         setShowCollisionHintModal(false)
@@ -377,6 +388,7 @@ export default function AssemblyModelPage({ onGoExecution }) {
       onRecordGrab={() => handleRecordPoint(setGrab)}
       onRecordDrop={() => handleRecordPoint(setDrop)}
       onRecordWaypoint={handleRecordWaypoint}
+      showAddWaypoint={waypoints.length < MAX_WAYPOINTS}
     />
   )
 }

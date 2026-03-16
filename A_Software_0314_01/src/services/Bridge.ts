@@ -33,6 +33,18 @@ export interface HardwarePayload {
   [key: string]: unknown
 }
 
+/**
+ * Hardware signals for UI workflow triggers.
+ *
+ * Integration contract for robot-side teammates:
+ * - After finishing the pre-programmed Test Tool run, output one line:
+ *   SIGNAL:TEST_TOOL_RUN_FINISHED
+ * - This line can come from serial output and will be parsed by the bridge.
+ */
+export const HARDWARE_SIGNALS = {
+  TEST_TOOL_RUN_FINISHED: 'TEST_TOOL_RUN_FINISHED',
+} as const
+
 // --- 硬件层必须实现的接口 ---
 
 export interface IHardwareBridge {
@@ -137,6 +149,15 @@ export function createWebSocketBridge(url: string = 'ws://localhost:8080'): IHar
             const msg = JSON.parse(event.data);
             if (msg.type === 'robot_serial' && msg.data) {
               const text = msg.data;
+
+              const signalMatch = text.match(/^SIGNAL:([A-Z0-9_]+)$/)
+              if (signalMatch) {
+                listener?.({
+                  type: 'event',
+                  event: signalMatch[1],
+                })
+                return
+              }
               
               // 魔法：在这里拦截并解析串口回传的坐标数据
               // 匹配格式: X: 200.0 mm | Y: 150.0 mm | Z: 100.0 mm | Pitch: 0.0 deg
@@ -153,6 +174,9 @@ export function createWebSocketBridge(url: string = 'ws://localhost:8080'): IHar
                   }
                 });
               }
+            }
+            if (msg.type === 'event' && typeof msg.event === 'string') {
+              listener?.({ type: 'event', event: msg.event })
             }
           } catch(e) {
             console.error("[Bridge] Parse error", e);

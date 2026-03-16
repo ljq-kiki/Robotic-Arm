@@ -6,6 +6,10 @@
   color: var(--magenta);
 }
 
+.assembly-intro-prominent {
+  color: var(--ink);
+}
+
 .assembly-badge {
   border: 2px solid var(--ink);
   box-shadow: 4px 4px 0 var(--shadow);
@@ -147,6 +151,13 @@
   margin: 0 auto;
 }
 
+.assembly-singularity-warning-top {
+  position: absolute;
+  top: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
 .assembly-third-coordinate {
   display: inline-flex;
   gap: 12px;
@@ -157,3 +168,101 @@
 .assembly-singularity-illustration {
   border: 3px solid #2f99dc;
 }
+
+.assembly-hint-overlay {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.assembly-hint-modal {
+  background: var(--panel);
+  max-width: 1120px;
+  width: calc(100% - 64px);
+  max-height: 82vh;
+  overflow-y: auto;
+}
+
+.assembly-hint-alert {
+  color: #ff3b3b;
+}
+
+.assembly-hint-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(-2px) scale(1.5);
+  transform-origin: center;
+  margin-right: 10px;
+}
+
+.assembly-hint-copy {
+  color: var(--ink);
+}
+
+.assembly-hint-arrow {
+  font-size: 24px;
+  text-shadow: 2px 2px 0 var(--shadow);
+}
+
+.assembly-hint-illustration {
+  width: 440px;
+  height: 320px;
+  background: #fff;
+  display: flex;
+  padding: 12px;
+}
+
+.assembly-hint-caption {
+  color: var(--muted);
+  line-height: 1.2;
+}
+
+.assembly-hint-divider {
+  height: 2px;
+  background: repeating-linear-gradient(90deg, var(--ink) 0 8px, transparent 8px 12px);
+  box-shadow: 0 3px 0 var(--shadow);
+}
+
+.assembly-trajectory-title {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.assembly-mode-pixel-btn {
+  min-width: 132px;
+  border-radius: 16px !important;
+  border: 2px solid currentColor !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+.assembly-mode-pixel-btn::before,
+.assembly-mode-pixel-btn::after {
+  display: none !important;
+}
+
+.assembly-mode-btn-pick {
+  color: #1ccf3c;
+}
+
+.assembly-mode-btn-drop {
+  color: #ff4fbf;
+}
+
+.assembly-trajectory-shell {
+  border: 3px solid var(--ink) !important;
+  box-shadow: 10px 10px 0 var(--shadow) !important;
+  margin-right: -4px;
+}
+
+.assembly-trajectory-shell.assembly-danger-shell {
+  border: 3px solid #d2465f !important;
+  background: rgba(210, 70, 95, 0.08) !important;
+  box-shadow: 10px 10px 0 var(--shadow) !important;
+}
+
+.assembly-trajectory-scroll {
+  /* Reserve a right gutter so scrollbar does not overlap content */
+  padding-right: 6px;
+  scrollbar-gutter: stable;
+}
+

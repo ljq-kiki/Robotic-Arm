@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import {
+  HARDWARE_SIGNALS,
   createWebSocketBridge,
   type ConnectionStatus,
   type HardwarePayload,
@@ -10,6 +11,7 @@ import {
 type HardwareConnection = 'connected' | 'disconnected' | 'error'
 type HardwareSource = 'mock' | 'hardware'
 type Listener = () => void
+type HardwareSignalListener = (signal: string) => void
 
 export type JogAxis = 'x' | 'y' | 'z' | 'rx'
 export type JogDirection = 'positive' | 'negative'
@@ -32,6 +34,7 @@ export interface HardwareStoreState {
 }
 
 const listeners = new Set<Listener>()
+const hardwareSignalListeners = new Set<HardwareSignalListener>()
 
 const createPoint = (
   x: number = 200,
@@ -164,6 +167,10 @@ function clearBridgeResources() {
   isRealHardwareConnected = false
 }
 
+function emitHardwareSignal(signal: string) {
+  hardwareSignalListeners.forEach((listener) => listener(signal))
+}
+
 function handleBridgePayload(payload: HardwarePayload) {
   if (payload.type === 'position' && payload.position) {
     setState({
@@ -180,6 +187,11 @@ function handleBridgePayload(payload: HardwarePayload) {
       connection: mapConnectionStatus(payload.status?.connection),
       coords: payload.status?.position ?? state.coords,
     })
+    return
+  }
+
+  if (payload.type === 'event' && payload.event) {
+    emitHardwareSignal(payload.event)
   }
 }
 
@@ -405,3 +417,12 @@ export function useHardwareStore() {
     startMockRun,
   }
 }
+
+export function subscribeHardwareSignal(listener: HardwareSignalListener) {
+  hardwareSignalListeners.add(listener)
+  return () => {
+    hardwareSignalListeners.delete(listener)
+  }
+}
+
+export { HARDWARE_SIGNALS }
