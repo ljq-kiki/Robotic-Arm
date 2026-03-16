@@ -3,6 +3,7 @@ import { PageLayout } from '../components/PageLayout.jsx'
 import { PixelCard } from '../components/PixelCard.jsx'
 import { PixelButton } from '../components/PixelButton.jsx'
 import { StepBar } from '../components/StepBar.jsx'
+import { initializeHardwareStore, useHardwareStore } from '../../services/useHardwareStore.ts'
 import './ExecutionPage.css'
 
 const steps = [
@@ -16,6 +17,14 @@ const EXECUTION_SUCCESS_MS = 5200
 const DANGER_SIGNAL_MS = 2300
 
 export default function ExecutionPage({ onRestartGame }) {
+  const hardware = useHardwareStore()
+  const connectionInfo = `${
+    hardware.connection === 'connected'
+      ? 'Connected'
+      : hardware.connection === 'error'
+        ? 'Error'
+        : 'Disconnected'
+  } · ${hardware.source === 'hardware' ? 'Real' : 'Virtual'}`
   const [phase, setPhase] = useState('idle') // idle | running | paused-danger | success
   const [progress, setProgress] = useState(0)
   const [dangerWarning, setDangerWarning] = useState(false)
@@ -41,6 +50,10 @@ export default function ExecutionPage({ onRestartGame }) {
   }
 
   useEffect(() => clearRunTimers, [])
+  useEffect(() => {
+    const cleanupHardware = initializeHardwareStore()
+    return cleanupHardware
+  }, [])
 
   const startExecutionRun = () => {
     clearRunTimers()
@@ -103,7 +116,10 @@ export default function ExecutionPage({ onRestartGame }) {
     <PageLayout>
       <div className="flex items-center justify-between shrink-0 mb-10">
         <div className="assembly-page-title px text-[24px]">Lion Model Assembly Game</div>
-        <div className="flex gap-3">
+        <div className="flex items-center gap-3">
+          <div className="connection-pill px text-[9px] px-2 py-2">
+            {connectionInfo}
+          </div>
           <div className="swatch" style={{ background: 'var(--bgPurple)' }} />
           <div className="swatch" style={{ background: 'var(--orange)' }} />
           <div className="swatch" style={{ background: 'var(--magenta)' }} />
@@ -112,7 +128,7 @@ export default function ExecutionPage({ onRestartGame }) {
 
       <StepBar steps={steps} />
 
-      <div className="grid lg:grid-cols-2 gap-8 flex-1 min-h-0 max-lg:grid-rows-[minmax(0,1fr)_minmax(0,1fr)]">
+      <div className="grid lg:grid-cols-[4fr_3fr] gap-8 flex-1 min-h-0 max-lg:grid-rows-[minmax(0,1fr)_minmax(0,1fr)]">
         <PixelCard
           padding="p-6"
           className="min-h-0 max-h-full flex flex-col overflow-hidden"

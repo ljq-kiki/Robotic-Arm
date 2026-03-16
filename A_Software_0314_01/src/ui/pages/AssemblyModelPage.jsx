@@ -60,6 +60,13 @@ export default function AssemblyModelPage({ onGoExecution }) {
   const canConfirm = isPointFilled(grab) && isPointFilled(drop)
   const requiresRecordedPoints = stage !== 'first-block'
   const canConfirmNow = requiresRecordedPoints ? canConfirm : true
+  const connectionInfo = `${
+    hardware.connection === 'connected'
+      ? 'Connected'
+      : hardware.connection === 'error'
+        ? 'Error'
+        : 'Disconnected'
+  } · ${hardware.source === 'hardware' ? 'Real' : 'Virtual'}`
 
   useEffect(() => {
     const cleanupHardware = initializeHardwareStore()
@@ -316,10 +323,7 @@ export default function AssemblyModelPage({ onGoExecution }) {
       }
       jogFrame={jogFrame}
       hasSingularityWarning={hasSingularityWarning}
-      hardwareStatusLabel={
-        hardware.connection === 'connected' ? 'Mock connected' : 'Disconnected'
-      }
-      temperatureLabel={`${hardware.temperature.toFixed(1)} C`}
+      connectionInfo={connectionInfo}
       onToggleMode={() => setMode((prev) => (prev === 'pick' ? 'drop' : 'pick'))}
       onConfirmTest={handleConfirmTest}
       onNextBlock={handleNextBlock}
