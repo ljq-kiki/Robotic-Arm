@@ -423,60 +423,6 @@ export async function sendMockJogMove(command: JogMoveCommand) {
   })
 }
 
-// === 终极修复版：解决严格模式报错和变量作用域问题 ===
-export function startFixedMoveTest(durationMs: number = 6000) {
-  if (typeof window === 'undefined') return
-
-  startTelemetry()
-
-  // 1. 发送硬件指令
-  const sentToRealHardware = sendBridgeCommand('FIXED_MOVE')
-  if (sentToRealHardware) {
-    sendBridgeCommand('TOGGLE_COORD')
-  }
-
-  // 2. 更新启动状态 (注意：这里更正为了同事定义的 createPoint)
-  setState({
-    connection: state.connection, 
-    source: sentToRealHardware ? 'hardware' : 'mock',
-    isRunning: true,
-    temperature: getNextTemperature(true),
-    coords: sentToRealHardware ? state.coords : createPoint(), 
-  })
-
-  // 3. Mock 模式的本地安全定时器 (必须加 const)
-  if (!sentToRealHardware) {
-    const mockIntervalId = window.setInterval(() => {
-      setState({
-        coords: createPoint(),
-        temperature: getNextTemperature(true),
-      })
-    }, 450)
-
-    // 运行结束后清理动画
-    window.setTimeout(() => {
-      window.clearInterval(mockIntervalId)
-    }, durationMs)
-  }
-
-  // 4. 运行结束后的状态重置与信号分发 (必须加 const)
-  const timeoutId = window.setTimeout(() => {
-    if (sentToRealHardware) {
-      sendBridgeCommand('TOGGLE_COORD')
-      // 兼容新架构：广播完成信号
-      hardwareSignalListeners.forEach((listener) =>
-        listener(HARDWARE_SIGNALS.TEST_TOOL_RUN_FINISHED)
-      )
-    }
-    
-    setState({
-      isRunning: false,
-      temperature: getNextTemperature(false),
-      coords: sentToRealHardware ? state.coords : createPoint(),
-    })
-  }, durationMs)
-}
-
 export function useHardwareStore() {
   const snapshot = useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
 
@@ -487,7 +433,6 @@ export function useHardwareStore() {
     resetMockRobotToHome,
     sendMockJogMove,
     startMockRun,
-    startFixedMoveTest, // <--- 就是在这里加上这一行！把它暴露给外部使用
   }
 }
 
