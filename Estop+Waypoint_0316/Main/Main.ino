@@ -890,6 +890,19 @@ void parse_cmd(char *cmd)
             }
         }
     }
+    // ==========================================
+    // 对串口指令 $MAG:1!（磁铁吸合）和 $MAG:0!（磁铁释放）的支持
+    // ==========================================
+    else if (cmdStr.indexOf("$MAG:") != -1)
+    {
+        if (sscanf((char *)uart_receive_buf, "$MAG:%d!", &int1))
+        {
+            pinMode(13, OUTPUT); // 确定 13 号引脚（继电器）为输出模式
+            digitalWrite(13, int1 == 1 ? HIGH : LOW);
+            Serial.print("[System] Magnet set to: ");
+            Serial.println(int1 == 1 ? "ON" : "OFF");
+        }
+    }
 
 }
 

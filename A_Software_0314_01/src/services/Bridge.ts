@@ -178,6 +178,18 @@ export function createWebSocketBridge(url: string = 'ws://localhost:8080'): IHar
             if (msg.type === 'robot_serial' && msg.data) {
               const text = msg.data;
 
+              // ==========================================
+              // 🚨 新增拦截器：将硬件原生的生硬文字报错，翻译成内部通用事件
+              // ==========================================
+              if (text.includes('EMERGENCY STOP TRIGGERED')) {
+                // 收到硬件急停，告诉 Store，但不直接弹窗，弹窗逻辑由 Store 决定
+                listener?.({ type: 'event', event: 'RAW_ESTOP_TRIGGERED' })
+              }
+              if (text.includes('SINGULARITY ZONE DETECTED')) {
+                // 收到奇异点，直接向网页抛出同事定义好的 SINGULARITY 信号
+                listener?.({ type: 'event', event: HARDWARE_SIGNALS.ASSEMBLY_SINGULARITY_REACHED })
+              }
+
               const signalMatch = text.match(/^SIGNAL:([A-Z0-9_]+)$/)
               if (signalMatch) {
                 listener?.({
