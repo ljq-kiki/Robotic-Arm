@@ -551,7 +551,7 @@ import {
 import { AssemblyModelPageView } from './AssemblyModelPageView.jsx'
 
 const EMPTY_POINT = { x: '', y: '', z: '', rx: '' }
-const ASSEMBLY_RUN_MS = 5000 // Mock 模式默认动画时长
+const ASSEMBLY_RUN_MS = 5000 
 const COLLISION_SIGNAL_MS = 2200
 const SINGULARITY_SIGNAL_MS = 2500
 const MAX_WAYPOINTS = 2
@@ -604,6 +604,7 @@ export default function AssemblyModelPage({ onGoExecution }) {
   const waitingSingularityHardwareSignalRef = useRef(false)
   const stageRef = useRef(stage)
   const waypointCountRef = useRef(waypoints.length)
+  const initCmdSentRef = useRef(false) // 新增：用于防抖和重试的标志位
 
   const canConfirm = isPointFilled(grab) && isPointFilled(drop)
   const requiresRecordedPoints = stage !== 'first-block'
@@ -621,15 +622,21 @@ export default function AssemblyModelPage({ onGoExecution }) {
   useEffect(() => { waypointCountRef.current = waypoints.length }, [waypoints.length])
 
   // ==========================================
-  // 🔌 1. 硬件初始化与底层守护指令
+  // 🔌 1. 硬件初始化与底层守护指令 (已彻底修复异步丢包Bug)
   // ==========================================
   useEffect(() => {
     const cleanupHardware = initializeHardwareStore()
-    // 进页面开启示教（Mock下这条指令会被忽略，真机下会卸力）
-    if (hardware.startAssemblyTeachMode) hardware.startAssemblyTeachMode()
+    initCmdSentRef.current = false
+
+    // 核心修复：解决 WebSocket 还没连上时，指令被吞掉导致不卸力和一直 DISCONNECTED 的问题。
+    // 轮询机制：每隔 400ms 尝试下发一次初始化指令（卸力+开启坐标流），直到真实硬件连上为止。
+    const initTimer = window.setInterval(() => {
+      if (!initCmdSentRef.current && hardware.startAssemblyTeachMode) {
+        hardware.startAssemblyTeachMode()
+      }
+    }, 400)
 
     const unsubscribeSignal = subscribeHardwareSignal((signal) => {
-      // 拦截信号弹窗逻辑（保留同事的完美代码）
       if (waitingP2HardwareSignalRef.current && signal === HARDWARE_SIGNALS.ASSEMBLY_REACHED_SPECIFIED_POINT && stageRef.current === 'second-block' && waypointCountRef.current < 1) {
         clearTimers()
         triggerCollision('waypoint')
@@ -650,12 +657,20 @@ export default function AssemblyModelPage({ onGoExecution }) {
     })
 
     return () => {
+      window.clearInterval(initTimer)
       cleanupHardware()
       unsubscribeSignal()
       clearTimers()
       setIsRunningPreview(false)
     }
   }, [])
+
+  // 监听到真实硬件连上并开始回传坐标后，停止轮询，防止重复发 'K' 导致坐标流闪烁
+  useEffect(() => {
+    if (hardware.connection === 'connected' && hardware.source === 'hardware') {
+      initCmdSentRef.current = true
+    }
+  }, [hardware.connection, hardware.source])
 
   // 坐标系和电磁铁的实时控制（仅真机生效）
   useEffect(() => {
@@ -689,7 +704,6 @@ export default function AssemblyModelPage({ onGoExecution }) {
     setSelectedCollisionOption(null)
   }
 
-  // 恢复：手动修改输入框
   const handlePointChange = (setter, axis, value) => {
     setter((prev) => ({ ...prev, [axis]: value }))
   }
@@ -698,7 +712,6 @@ export default function AssemblyModelPage({ onGoExecution }) {
     setWaypoints((prev) => prev.map((wp) => wp.id === id ? { ...wp, isManuallyEdited: true, point: { ...wp.point, [axis]: value } } : wp))
   }
 
-  // 恢复：前端点动控制（虚拟与真机均可）
   const handleJogMove = async (axis, direction) => {
     const distance = axis === 'rx' ? 5 : 10
     if (hardware.sendMockJogMove) {
@@ -706,7 +719,6 @@ export default function AssemblyModelPage({ onGoExecution }) {
     }
   }
 
-  // 软硬结合的 Record
   const handleRecordPoint = (setter) => setter(hardware.captureCurrentPoint())
   const handleRecordWaypoint = (id) => {
     const currentPoint = hardware.captureCurrentPoint()
@@ -748,20 +760,15 @@ export default function AssemblyModelPage({ onGoExecution }) {
     setSelectedCollisionOption(null)
     setIsRunningPreview(true)
 
-    // 判断当前是在跑真机还是在跑 Mock
     const isRealHardwarePath = hardware.source === 'hardware' && hardware.connection === 'connected'
     
-    // 动态计算真实硬件跑完所需的准确时间：
-    // 500(锁) + 2000(起) + 1500(停) + 1500(吸) + (n*2000)途经点 + 2000(终) + 1500(停)
+    // 动态计算真实硬件跑完所需的准确时间
     const realHardwareDurationMs = 500 + 2000 + 1500 + 1500 + (waypoints.length * 2000) + 2000 + 1500
-    // 如果是真机就等它跑完，如果是 Mock 就用默认的 5 秒动画
     const currentRunDuration = isRealHardwarePath ? realHardwareDurationMs : ASSEMBLY_RUN_MS
 
     if (isRealHardwarePath) {
-      // 触发真实硬件
       hardware.executeAssemblyPath(grab, waypoints.map(w => w.point), drop, referenceFrame)
     } else {
-      // 触发前端虚拟动画
       if (hardware.startMockRun) hardware.startMockRun(ASSEMBLY_RUN_MS)
     }
 
@@ -796,17 +803,15 @@ export default function AssemblyModelPage({ onGoExecution }) {
       return
     }
 
-    // 动作顺利跑完后弹出 SUCCESS
     runCompleteTimerRef.current = window.setTimeout(() => {
       clearTimers()
       setIsRunningPreview(false)
       setHasCollision(false)
       setShowSuccessModal(true)
-    }, currentRunDuration) // <--- 使用动态计算的完美匹配时间
+    }, currentRunDuration)
   }
 
-  // ... (保留后面的 Modal 关闭等所有 UI 同事写的代码，直接映射) ...
-  const handleNextBlock = () => { /* 保留原逻辑 */
+  const handleNextBlock = () => {
     clearTimers()
     setShowSuccessModal(false)
     if (stage === 'first-block') setStage('second-block')
@@ -881,7 +886,6 @@ export default function AssemblyModelPage({ onGoExecution }) {
       }}
       onSelectCollisionOption={setSelectedCollisionOption}
       onConfirmCollisionHint={() => {
-        // ... (省略冗长的 Modal 判断，使用原始判断)
         if (collisionHintType === 'singularity') {
           if (selectedCollisionOption !== 'C') { setShowWrongAnswerToast(true); return }
           setShowCollisionHintModal(false); setSelectedCollisionOption(null); setHasCollision(false); setShowWrongAnswerToast(false); return
@@ -901,9 +905,8 @@ export default function AssemblyModelPage({ onGoExecution }) {
       onAddWaypoint={handleAddWaypoint}
       onRemoveWaypoint={handleRemoveWaypoint}
       
-      // 恢复点动与编辑
       onChangeGrabAxis={(axis, value) => handlePointChange(setGrab, axis, value)}
-      onChangeGrabFrame={setReferenceFrame} // UI 选择同步更新
+      onChangeGrabFrame={setReferenceFrame}
       onChangeDropAxis={(axis, value) => handlePointChange(setDrop, axis, value)}
       onChangeDropFrame={setReferenceFrame}
       onChangeWaypointAxis={handleWaypointChange}
