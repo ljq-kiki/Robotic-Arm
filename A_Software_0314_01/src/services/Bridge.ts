@@ -250,8 +250,8 @@ export function createWebSocketBridge(url: string = 'ws://localhost:8080'): IHar
           "TEACH_START": "C", "RECORD_START": "A", "RECORD_END": "B",
           "CONFIRM": "Y", "CANCEL": "N", "AUTO_RUN": "V"
         };
-        const mappedCmd = COMMAND_MAP[command] || command;
-        ws.send(mappedCmd);
+        const mappedCmd = COMMAND_MAP[command] || command; // 查字典：如果找到就用翻译后的，找不到就原样发送
+        ws.send(mappedCmd); //通过 WebSocket 发出去
       } else {
         console.warn("[Bridge] Cannot send command, socket not connected.");
       }
