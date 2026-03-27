@@ -423,6 +423,8 @@ export async function sendMockJogMove(command: JogMoveCommand) {
   })
 }
 
+
+
 export function useHardwareStore() {
   const snapshot = useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
 
@@ -436,11 +438,101 @@ export function useHardwareStore() {
   }
 }
 
+// =================================================================================
+// === Assembly 示教页面专属控制逻辑 (完全对齐 TestTool 架构) ===
+// =================================================================================
+
+export function startAssemblyTeachMode() {
+  if (typeof window === 'undefined') return
+  startTelemetry() // 👈【核心修复】：这句激活心跳，瞬间变为 CONNECTED！
+  sendBridgeCommand('UNLOCK')
+  sendBridgeCommand('TOGGLE_COORD')
+}
+
+export function setAssemblyReferenceFrame(frame: 'Base' | 'Target') {
+  sendBridgeCommand(frame === 'Base' ? '$FRM:0!' : '$FRM:1!')
+}
+
+export function controlAssemblyMagnet(isOn: boolean) {
+  sendBridgeCommand(isOn ? '$MAG:1!' : '$MAG:0!')
+}
+
+let assemblyAbortController: AbortController | null = null
+
+export function executeAssemblyPath(pick: PointData, waypoints: PointData[], drop: PointData, referenceFrame: 'Base' | 'Target') {
+  if (typeof window === 'undefined') return
+  startTelemetry()
+  setState({ isRunning: true })
+
+  if (assemblyAbortController) assemblyAbortController.abort()
+  assemblyAbortController = new AbortController()
+  const signal = assemblyAbortController.signal
+  const hasWaypoints = waypoints.length > 0
+
+  // 🚨 完美触发同事写的信号接口 🚨
+  const estopListener = (eventSignal: string) => {
+    if (eventSignal === 'RAW_ESTOP_TRIGGERED') {
+      if (assemblyAbortController) assemblyAbortController.abort()
+      
+      // 根据业务逻辑，分发给同事预留的不同弹窗信号
+      if (!hasWaypoints) {
+        hardwareSignalListeners.forEach(l => l(HARDWARE_SIGNALS.ASSEMBLY_REACHED_SPECIFIED_POINT))
+      } else {
+        hardwareSignalListeners.forEach(l => l(HARDWARE_SIGNALS.ASSEMBLY_ESTOP_BEFORE_TARGET))
+      }
+      setState({ isRunning: false })
+    }
+  }
+  hardwareSignalListeners.add(estopListener)
+
+  const wait = (ms: number) => new Promise((resolve, reject) => {
+    const timeout = setTimeout(resolve, ms)
+    signal.addEventListener('abort', () => { clearTimeout(timeout); reject(new Error('ABORTED')) })
+  })
+  const parseNum = (val: string) => Math.round(Number(val)) || 0
+
+  const runSequence = async () => {
+    try {
+      sendBridgeCommand('LOCK')
+      await wait(500)
+      const cmdPrefix = referenceFrame === 'Base' ? '$KMS' : '$KMT'
+
+      // 去起点并吸磁铁
+      sendBridgeCommand(`${cmdPrefix}:${parseNum(pick.x)},${parseNum(pick.y)},${parseNum(pick.z)},2000!`)
+      await wait(3500) // 2s移动 + 1.5s停顿
+      controlAssemblyMagnet(true)
+      await wait(1500)
+
+      // 途径点
+      for (const wp of waypoints) {
+        if (wp.x !== '') {
+          sendBridgeCommand(`${cmdPrefix}:${parseNum(wp.x)},${parseNum(wp.y)},${parseNum(wp.z)},2000!`)
+          await wait(2000)
+        }
+      }
+
+      // 终点放磁铁
+      sendBridgeCommand(`${cmdPrefix}:${parseNum(drop.x)},${parseNum(drop.y)},${parseNum(drop.z)},2000!`)
+      await wait(3500) // 2s移动 + 1.5s停顿
+      controlAssemblyMagnet(false)
+      
+      setState({ isRunning: false })
+    } catch (e) {
+      // 被急停打断
+    } finally {
+      hardwareSignalListeners.delete(estopListener)
+    }
+  }
+  runSequence()
+}
+
 export function subscribeHardwareSignal(listener: HardwareSignalListener) {
   hardwareSignalListeners.add(listener)
   return () => {
     hardwareSignalListeners.delete(listener)
   }
 }
+
+
 
 export { HARDWARE_SIGNALS }
