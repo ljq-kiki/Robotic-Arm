@@ -2,10 +2,9 @@ import React, { useEffect, useRef, useState } from 'react'
 import {
   HARDWARE_SIGNALS,
   captureCurrentPoint,
-  initializeHardwareStore, 
-  //0319
-  startAssemblyTeachMode, // 确保导入了这个函�?
+  initializeHardwareStore,
   resetMockRobotToHome,
+  sendAssemblyTeachEnable,
   sendMockJogMove,
   subscribeHardwareSignal,
   startMockRun,
@@ -167,38 +166,6 @@ export default function AssemblyModelPage({ onGoExecution }) {
       setIsRunningPreview(false)
     }
   }, [])
-  
-
-  // //0324  ������ҳ����һ�е�����ӳɹ��󣬵ȴ�1s�ٷ���ָ��U
-  // useEffect(() => {
-  //   if (hardware.connection === 'connected' && hardware.source === 'hardware') {
-  //     console.log("Detected Real Robot connection. Initializing with delay...");
-      
-  //     // ����һ����ʱ��ȷ��������·��ȫ�ȹ�
-  //     const initTimer = setTimeout(() => {
-  //       import('../../services/useHardwareStore.ts').then(m => {
-  //         m.startAssemblyTeachMode();
-  //       });
-  //     }, 1000); // �������� 1 ��
-
-  //     return () => clearTimeout(initTimer);
-  //   }
-  // }, [hardware.connection, hardware.source]);
-  // 0328 页面初始化：延迟 2 秒后进入纯净的示教模式 (发 U，不发 K)
-  useEffect(() => {
-    // 只有在真正连接上物理设备时才触发
-    if (hardware.connection === 'connected' && hardware.source === 'hardware') {
-      const timer = setTimeout(() => {
-        console.log("[Assembly] 2s delayed: Entering teach mode (U)...");
-        // 动态引入并调用刚在 store 里新写的 enterTeachMode
-        import('../../services/useHardwareStore.ts').then(m => {
-          if (m.enterTeachMode) m.enterTeachMode();
-        });
-      }, 2000); // 延时 2000 毫秒
-
-      return () => clearTimeout(timer);
-    }
-  }, [hardware.connection, hardware.source]);
 
   useEffect(() => {
     if (!showCollisionToast) return undefined
@@ -266,113 +233,25 @@ export default function AssemblyModelPage({ onGoExecution }) {
     )
   }
 
-  // const handleRecordPoint = (setter) => {
-  //   setter(captureCurrentPoint())
-  // }
+  const handleRecordPoint = (setter) => {
+    setter(captureCurrentPoint())
+  }
 
-  // //0324 �޸ĺ�
-  // const handleRecordPoint = (setter, type) => {
-  //   // ? ����ͨ�� hardware ʵ�����ã�����ȷ���ߵ��ǡ���ʵ���ӡ�����·
-  //   if (hardware.recordPointWithSignal) {
-  //     const point = hardware.recordPointWithSignal(type);
-  //     setter(point);
-  //   } else {
-  //     console.error("recordPointWithSignal is not exported from hardware store!");
-  //   }
-  // }
-
-  // AssemblyModelPage.jsx
-
-// const handleRecordPoint = (setter, type) => {
-
-//   // ���� store �е��첽����
-//   // setter �����յ�Ӳ���ش������ִ��
-//   hardware.recordPointWithSignal(type, (newCoords) => {
-//     setter(newCoords); // �����ִ�� setGrab(newCoords) �� setDrop(newCoords)
-//     // console.log(`[UI] ${type} point updated:`, newCoords);
-//   });
-
-//   // // 2. ����һ����ʱ������ר�ŵȴ���һ�ε��������
-//   // const unsubscribe = subscribeHardwareSignal((payload) => {
-//   //   // ����Ƿ��յ����µ������
-//   //   if (typeof payload === 'object' && payload.x) {
-//   //     setter(payload); // ��Ӳ���ش����������������Ӧ�� Pick/Drop ��Ƭ
-//   //     unsubscribe();   // �ɹ�������������ټ���������ֹ��������
-//   //   }
-//   // });
-// };
-// 0328 处理 Pick Point (起点) 和 Drop Point (终点) 的 RECORD 按钮
-  const handleRecordPoint = async (setter, type) => {
-    // 判断当前点击的是起点还是终点，并获取对应的下拉框参考系
-    const frame = type === 'pick' ? grabFrame : dropFrame;
-    // 起点对应 'A' (在字典中为 RECORD_START)，终点对应 'B' (RECORD_END)
-    const cmd = type === 'pick' ? 'RECORD_START' : 'RECORD_END'; 
-    
-    import('../../services/useHardwareStore.ts').then(async (m) => {
-      if (m.triggerAtomicRecord) {
-        // 1. 触发原子化操作（发指令 -> 等1秒 -> 发 P/TP）
-        await m.triggerAtomicRecord(cmd, frame);
-        
-        // 2. 等待串口回传坐标并被前端状态库解析 (400ms 的状态更新缓冲足够了)
-        setTimeout(() => {
-          const newCoords = m.captureCurrentPoint(); // 从状态机里抓取最新坐标
-          setter(newCoords); // 将新坐标填入卡片
-        }, 400);
-      }
-    });
-  };
-
-  // const handleRecordWaypoint = (id) => {
-  //   const currentPoint = captureCurrentPoint()
-  //   setWaypoints((prev) =>
-  //     prev.map((waypoint) =>
-  //       waypoint.id === id
-  //         ? {
-  //             ...waypoint,
-  //             point: currentPoint,
-  //             frame: jogFrame,
-  //             isManuallyEdited: false,
-  //           }
-  //         : waypoint,
-  //     ),
-  //   )
-  // }
-// 0328 处理 WayPoint (过渡点) 的 RECORD 按钮
-  const handleRecordWaypoint = async (id) => {
-    // 1. 【关键修复】通过 id 找到它在数组中的实际位置(index)
-    const index = waypoints.findIndex(wp => wp.id === id);
-    if (index === -1) {
-        console.error("[UI] Waypoint ID not found:", id);
-        return;
-    }
-
-    // 2. 正常获取参考系和指令
-    const frame = waypoints[index].frame || 'Base'; 
-    const cmd = index === 0 ? 'RECORD_W1' : 'RECORD_W2'; // 对应 Bridge 里的 W 和 X
-    
-    console.log(`[UI] Recording Waypoint ${index + 1} (ID:${id}) -> CMD: ${cmd}, Frame: ${frame}`);
-
-    import('../../services/useHardwareStore.ts').then(async (m) => {
-      if (m.triggerAtomicRecord) {
-        // 3. 触发原子化操作
-        await m.triggerAtomicRecord(cmd, frame);
-        
-        // 4. 缓冲 400ms 后更新 UI
-        setTimeout(() => {
-          const newCoords = m.captureCurrentPoint();
-          setWaypoints(prev => {
-            const newWp = [...prev];
-            // 找到对应的元素并更新坐标
-            const targetIdx = newWp.findIndex(wp => wp.id === id);
-            if (targetIdx !== -1) {
-              newWp[targetIdx] = { ...newWp[targetIdx], point: newCoords };
+  const handleRecordWaypoint = (id) => {
+    const currentPoint = captureCurrentPoint()
+    setWaypoints((prev) =>
+      prev.map((waypoint) =>
+        waypoint.id === id
+          ? {
+              ...waypoint,
+              point: currentPoint,
+              frame: jogFrame,
+              isManuallyEdited: false,
             }
-            return newWp;
-          });
-        }, 400);
-      }
-    });
-  };
+          : waypoint,
+      ),
+    )
+  }
 
   const handleWaypointFrameChange = (id, frame) => {
     setWaypoints((prev) =>
@@ -517,7 +396,7 @@ export default function AssemblyModelPage({ onGoExecution }) {
 
   const handleSuccessPrimaryAction = () => {
     setShowSuccessModal(false)
-    if (stage === 'third-block' && isAutomaticReassemblyReady) {
+    if (stage === 'third-block') {
       if (typeof onGoExecution === 'function') {
         onGoExecution()
       }
@@ -573,11 +452,21 @@ export default function AssemblyModelPage({ onGoExecution }) {
       successPrimaryLabel={
         stage === 'third-block' && isAutomaticReassemblyReady
           ? 'Automatic reassembly'
-          : 'Next block'
+          : stage === 'third-block'
+            ? 'Automatic run'
+            : 'Next block'
+      }
+      successSubline={
+        stage === 'third-block' && !isAutomaticReassemblyReady
+          ? 'AUTOMATIC RUN READY!'
+          : 'NEXT LEVEL UNLOCKED!'
       }
       jogFrame={jogFrame}
       hasSingularityWarning={hasSingularityWarning}
       connectionInfo={connectionInfo}
+      onEnableTeach={() => {
+        sendAssemblyTeachEnable()
+      }}
       onToggleMode={() => setMode((prev) => (prev === 'pick' ? 'drop' : 'pick'))}
       onConfirmTest={handleConfirmTest}
       onNextBlock={handleNextBlock}
@@ -645,11 +534,8 @@ export default function AssemblyModelPage({ onGoExecution }) {
       onChangeWaypointFrame={handleWaypointFrameChange}
       onChangeJogFrame={setJogFrame}
       onJogMove={handleJogMove}
-      //onRecordGrab={() => handleRecordPoint(setGrab)}
-      //oncordDrop={() => handleRecordPoint(setDrop)}
-      //0324 �� AssemblyModelPageView �� props ע�봦
-      onRecordGrab={() => handleRecordPoint(setGrab, 'pick')}  // ���� 'pick'
-      onRecordDrop={() => handleRecordPoint(setDrop, 'drop')}  // ���� 'drop'
+      onRecordGrab={() => handleRecordPoint(setGrab)}
+      onRecordDrop={() => handleRecordPoint(setDrop)}
       onRecordWaypoint={handleRecordWaypoint}
       showAddWaypoint={waypoints.length < MAX_WAYPOINTS}
     />
