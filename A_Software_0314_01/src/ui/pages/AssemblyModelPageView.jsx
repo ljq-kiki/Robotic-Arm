@@ -8,6 +8,8 @@ import { StepBar } from '../components/StepBar.jsx'
 import { PixelSelect } from '../components/PixelSelect.jsx'
 import { TrajectoryPointCard } from '../components/TrajectoryPointCard.jsx'
 import { CelebrationImage } from '../components/CelebrationImage.jsx'
+import { ResetArmButton } from '../components/ResetArmButton.jsx'
+import { ConnectionStatusLabel } from '../components/ConnectionStatusLabel.jsx'
 import '../components/TrajectoryPointCard.css'
 import './AssemblyModelPageView.css'
 
@@ -301,6 +303,8 @@ export function AssemblyModelPageView({
           Lion Model Assembly Game
         </div>
         <div className="flex items-center gap-3">
+          <ConnectionStatusLabel text={connectionInfo} />
+          <ResetArmButton />
           <button
             type="button"
             className="connection-pill px text-[9px] px-2 py-2 cursor-pointer select-none hover:brightness-[0.97] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[2px_2px_0_var(--shadow)]"
@@ -308,9 +312,6 @@ export function AssemblyModelPageView({
           >
             Enable
           </button>
-          <div className="connection-pill px text-[9px] px-2 py-2">
-            {connectionInfo}
-          </div>
           <div className="swatch" style={{ background: 'var(--bgPurple)' }} />
           <div className="swatch" style={{ background: 'var(--orange)' }} />
           <div className="swatch" style={{ background: 'var(--magenta)' }} />

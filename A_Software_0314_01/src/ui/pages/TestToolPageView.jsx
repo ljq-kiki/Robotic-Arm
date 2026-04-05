@@ -8,6 +8,8 @@ import { PixelInput } from '../components/PixelInput.jsx'
 import { PixelToast } from '../components/PixelToast.jsx'
 import { PixelRadio } from '../components/PixelRadio.jsx'
 import { mediaAssets } from '../mediaAssets.js'
+import { ResetArmButton } from '../components/ResetArmButton.jsx'
+import { ConnectionStatusLabel } from '../components/ConnectionStatusLabel.jsx'
 import './TestToolPageView.css'
 
 const steps = [
@@ -167,9 +169,8 @@ export function TestToolPageView({
           Lion Model Assembly Game
         </div>
         <div className="flex items-center gap-3">
-          <div className="connection-pill px text-[9px] px-2 py-2">
-            {connectionInfo}
-          </div>
+          <ConnectionStatusLabel text={connectionInfo} />
+          <ResetArmButton />
           <div className="swatch testtool-swatch-purple" />
           <div className="swatch testtool-swatch-orange" />
           <div className="swatch testtool-swatch-magenta" />
