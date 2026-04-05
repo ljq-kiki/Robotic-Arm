@@ -38,7 +38,7 @@ function HintModal({
   onSelectOption,
   onClose,
   onConfirm,
-  canConfirm,
+  showWrongAnswerToast,
 }) {
   return (
     <div
@@ -47,6 +47,14 @@ function HintModal({
       <div
         className="testtool-hint-modal pixel-card soft-grid p-10"
       >
+        {showWrongAnswerToast ? (
+          <div
+            className="testtool-hint-wrong-toast px text-[12px]"
+            role="status"
+          >
+            Wrong answer
+          </div>
+        ) : null}
         <div className="mb-8">
           <div
             className="testtool-hint-alert px text-[18px] mb-6 flex items-center"
@@ -128,10 +136,7 @@ function HintModal({
           </PixelButton>
           <PixelButton
             variant="magenta"
-            className={`flex-1 py-4 text-[12px] ${
-              !canConfirm ? 'opacity-40 pointer-events-none' : ''
-            }`}
-            disabled={!canConfirm}
+            className="flex-1 py-4 text-[12px]"
             onClick={onConfirm}
           >
             Confirm
@@ -149,6 +154,7 @@ export function TestToolPageView({
   hasError,
   isSuccess,
   showToast,
+  showHintWrongToast,
   showHintModal,
   selectedOption,
   selectedTool,
@@ -306,7 +312,7 @@ export function TestToolPageView({
           onSelectOption={onSelectOption}
           onClose={onCloseHintModal}
           onConfirm={onConfirmHintModal}
-          canConfirm={selectedOption === 'C'}
+          showWrongAnswerToast={showHintWrongToast}
         />
       )}
     </PageLayout>

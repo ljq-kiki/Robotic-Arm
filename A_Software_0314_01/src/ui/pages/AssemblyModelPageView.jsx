@@ -54,9 +54,6 @@ function CollisionHintModal({
   const isDirectionStepOne = hintType === 'direction' && hintStep === 1
   const isDirectionStepTwo = hintType === 'direction' && hintStep === 2
   const isSingularityHint = hintType === 'singularity'
-  const expectedAnswer = isSingularityHint ? 'C' : isDirectionStepTwo ? 'A' : 'B'
-  const canConfirm = selectedOption === expectedAnswer
-  const shouldDisableConfirm = hintType === 'waypoint' ? false : !canConfirm
   const primaryLabel = isDirectionStepOne ? 'NEXT' : 'Confirm'
   const visual =
     hintType === 'waypoint'
@@ -147,8 +144,11 @@ function CollisionHintModal({
     <div className="assembly-hint-overlay fixed inset-0 z-50 flex items-center justify-center">
       <div className="assembly-hint-modal pixel-card soft-grid p-10">
         {showWrongAnswerToast && (
-          <div className="assembly-wrong-answer-toast px text-[12px]">
-            ⚠ Wrong answer
+          <div
+            className="assembly-wrong-answer-toast px text-[12px]"
+            role="status"
+          >
+            Wrong answer
           </div>
         )}
         <div className="mb-8">
@@ -226,10 +226,7 @@ function CollisionHintModal({
           )}
           <PixelButton
             variant="magenta"
-            className={`flex-1 py-4 text-[12px] ${
-              shouldDisableConfirm ? 'opacity-40 pointer-events-none' : ''
-            }`}
-            disabled={shouldDisableConfirm}
+            className="flex-1 py-4 text-[12px]"
             onClick={onConfirm}
           >
             {primaryLabel}
