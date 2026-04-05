@@ -5,11 +5,16 @@ import TestToolPage from './TestToolPage.jsx'
 import AssemblyModelPage from './AssemblyModelPage.jsx'
 import ExecutionPage from './ExecutionPage.jsx'
 
-/** 开发时 URL ?preview=execution-success 可跳过流程直接进入 Execute 页（配合 ExecutionPage 同参数看庆祝界面） */
+/**
+ * 开发预览：
+ * - ?preview=execution — 直接进入 Execute 主界面（idle）
+ * - ?preview=execution-success — 同上，且 ExecutionPage 进入庆祝完成态
+ */
 function getInitialStep() {
   if (import.meta.env.DEV && typeof window !== 'undefined') {
     const q = new URLSearchParams(window.location.search)
-    if (q.get('preview') === 'execution-success') return 'execution'
+    const p = q.get('preview')
+    if (p === 'execution' || p === 'execution-success') return 'execution'
   }
   return 'install'
 }

@@ -49,8 +49,34 @@
   transform: scale(0.94);
 }
 
-/* Black jagged ring (+) */
-.waypoint-pixel-circle-btn--add {
+/* 使用 PNG 图标时去掉文字时代的描边滤镜 */
+.waypoint-pixel-circle-btn--img {
+  background: transparent;
+  filter: none;
+  box-shadow: none;
+}
+
+.waypoint-action-icon {
+  display: block;
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  image-rendering: crisp-edges;
+  pointer-events: none;
+}
+
+.waypoint-action-icon--add {
+  width: 38px;
+  height: 38px;
+}
+
+.waypoint-action-icon--remove {
+  width: 42px;
+  height: 42px;
+}
+
+/* 保留 modifier 类名供未来扩展；加号按钮现为位图 */
+.waypoint-pixel-circle-btn--add:not(.waypoint-pixel-circle-btn--img) {
   color: var(--ink);
   filter:
     drop-shadow(2px 0 0 var(--ink))
@@ -63,8 +89,7 @@
     drop-shadow(-2px -2px 0 var(--ink));
 }
 
-/* Red jagged ring (−) + red glyph */
-.waypoint-pixel-circle-btn--remove {
+.waypoint-pixel-circle-btn--remove:not(.waypoint-pixel-circle-btn--img) {
   color: #d81b1b;
   background: #ffffff;
   filter:
@@ -81,13 +106,18 @@
 .trajectory-point-card-remove {
   position: absolute;
   top: 0;
-  right: 6px;
+  right: 0;
   transform: translate(0, -45%);
   z-index: 10;
 }
 
 .trajectory-point-card-remove.waypoint-pixel-circle-btn:active {
   transform: translate(0, -45%) scale(0.94);
+}
+
+.trajectory-point-card-remove.waypoint-pixel-circle-btn--img {
+  width: 52px;
+  height: 52px;
 }
 
 .trajectory-point-card-dot {
