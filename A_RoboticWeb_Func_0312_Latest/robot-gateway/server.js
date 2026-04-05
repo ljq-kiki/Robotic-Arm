@@ -1,8 +1,8 @@
 //这个文件中加入了 COMMAND_MAP 字典来进行指令翻译，并引入了 ReadlineParser
 const WebSocket = require("ws");
-const { SerialPort, ReadlineParser } = require("serialport"); // 引入按行解析器
+const { SerialPort, ReadlineParser } = require("serialport"); // 引入按行解析�?
 
-// 1. 启动 WebSocket 服务器
+// 1. 启动 WebSocket 服务�?
 const wss = new WebSocket.Server({ port: 8080 });
 console.log("WebSocket server running at ws://localhost:8080");
 
@@ -12,7 +12,7 @@ const port = new SerialPort({
   baudRate: 115200,
 });
 
-// ✨ 核心升级：增加按行读取器，防止串口数据断截，让网页显示整齐划一
+// �? 核心升级：增加按行读取器，防止串口数据断截，让网页显示整齐划一
 const parser = port.pipe(new ReadlineParser({ delimiter: '\n' }));
 let serialConnected = false
 
@@ -23,7 +23,7 @@ port.on("open", () => {
     currentClient.send(
       JSON.stringify({
         type: "status",
-        status: { connection: "connected" },
+        status: { connection: "connected" }, //�����������ӳɹ�
         message: "Serial connected",
       }),
     )
@@ -46,7 +46,7 @@ port.on("error", (err) => {
 
 let currentClient = null;
 
-// ✨ 新增：指令翻译字典 (前端易读单词 -> 底层高效单字符)
+// �? 新增：指令翻译字�? (前端易读单词 -> 底层高效单字�?)
 const COMMAND_MAP = {
   "UNLOCK": "U",
   "LOCK": "L",
@@ -71,7 +71,7 @@ wss.on("connection", (ws) => {
     message: serialConnected ? "Serial connected" : "Serial disconnected",
   }));
 
-  // 浏览器发消息 → 转发给 ESP32
+  // 浏览器发消息 �? 转发�? ESP32
   ws.on("message", (message) => {
     const text = message.toString().trim();
     console.log("FROM FRONTEND:", text);
@@ -97,7 +97,7 @@ wss.on("connection", (ws) => {
   });
 });
 
-// 4. ESP32 串口消息 → 转发给浏览器 (使用 parser 替代原先的 port.on('data'))
+// 4. ESP32 串口消息 �? 转发给浏览器 (使用 parser 替代原先�? port.on('data'))
 parser.on("data", (line) => {
   const text = line.trim(); // 清理多余的回车符
   if (text) {
