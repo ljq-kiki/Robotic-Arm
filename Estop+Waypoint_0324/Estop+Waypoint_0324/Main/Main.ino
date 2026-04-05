@@ -101,13 +101,8 @@ int final_end_pos[5];
 int final_waypoint_pos[2][5];
 
 // === 新增：坐标系切换与偏移常量 ===
-// uint8_t current_ref_frame = 0; // 0: Base坐标系, 1: Target坐标系
-// const float TARGET_OFFSET_Y = 370.0; // Target原点在Base Y轴+370mm处
-// 0331 非固定坐标系=== 坐标系切换与动态偏移变量 ===
 uint8_t current_ref_frame = 0; // 0: Base坐标系, 1: Target坐标系
-float target_offset_x = 0.0;
-float target_offset_y = 0.0;
-float target_offset_z = 0.0;
+const float TARGET_OFFSET_Y = 370.0; // Target原点在Base Y轴+370mm处
 
 void setup_nled();
 void setup_uart();
@@ -144,8 +139,6 @@ void stream_servo_positions_to_pc();
 void loop_teach_record();
 
 void serialEvent();
-//0404
-void loop_print_tcp();
 
 //0316 声明急停模块函数
 extern void setup_emergency_stop();
@@ -154,8 +147,6 @@ extern void loop_emergency_stop();
 extern void loop_path_memory();
 //申明正逆运动学末端坐标位置函数
 extern void loop_oneshot_tcp();
-//0330 申明手写输入解析函数
-extern void handle_manual_coordinate_input(char *cmd_buf);
 
 #define US01_ADDR 0x2D  
 #define REG_R_RED    0x00
@@ -832,25 +823,6 @@ void parse_cmd(char *cmd)
     int index = 0, int1 = 0, int2 = 0, int3 = 0, int4 = 0;
     String cmdStr = String(cmd);
     Serial.println(cmd);
-
-    //0330
-    // ========================================================
-    // 【新增修改】：识别手动输入坐标 (H, I, J, Q 以及带 T 的版本)
-    // ========================================================
-    char first = toupper(cmd[0]);
-    // 检查是否是以 H, I, J, Q 开头，或者以 T 开头且紧跟 H, I, J, Q
-    bool isManualPoint = (first == 'H' || first == 'I' || first == 'J' || first == 'Q');
-    bool isTargetManualPoint = (first == 'T' && strlen(cmd) > 1 && 
-                               (toupper(cmd[1]) == 'H' || toupper(cmd[1]) == 'I' || 
-                                toupper(cmd[1]) == 'J' || toupper(cmd[1]) == 'Q'));
-
-    if (isManualPoint || isTargetManualPoint) {
-        // 调用 ManualInputHandler.ino 中定义的解析函数
-        extern void handle_manual_coordinate_input(char *cmd_buf); 
-        handle_manual_coordinate_input(cmd);
-        return; // 解析完手动坐标后直接退出，不再执行后续判断
-    }
-
     if (cmdStr.indexOf("$RST!") != -1)
     {
         ESP.restart();
@@ -914,19 +886,9 @@ void parse_cmd(char *cmd)
     {
         if (sscanf((char *)uart_receive_buf, "$KMT:%d,%d,%d,%d!", &int1, &int2, &int3, &int4))
         {
-            // // 核心变换：将 Target 坐标系下的 Y 转换回 Base 坐标系下的 Y (加上 370mm)
-            // int base_y = int2 + (int)TARGET_OFFSET_Y;
-            // if (kinematics_move(int1, base_y, int3, int4)) {
-            //     // Serial.println("Moved in Target Frame");
-            // } else {
-            //     Serial.println("Can not find best pos in Target frame!!!");
-            // }
-            // --- 核心修改：使用动态偏移量，且无数值时(has_end=false)按 0 计算 ---
-            extern bool has_end;
-            float base_x = int1 + (has_end ? target_offset_x : 0.0);
-            float base_y = int2 + (has_end ? target_offset_y : 0.0);
-            float base_z = int3 + (has_end ? target_offset_z : 0.0);
-            if (kinematics_move(base_x, base_y, base_z, int4)) {
+            // 核心变换：将 Target 坐标系下的 Y 转换回 Base 坐标系下的 Y (加上 370mm)
+            int base_y = int2 + (int)TARGET_OFFSET_Y;
+            if (kinematics_move(int1, base_y, int3, int4)) {
                 // Serial.println("Moved in Target Frame");
             } else {
                 Serial.println("Can not find best pos in Target frame!!!");
@@ -1002,48 +964,11 @@ void do_group_once(int group_num)
 	parse_action(cmd_return);
 }
 
-// void serialEvent() {
-// 	while (Serial.available()) {
-// 		char received_char = (char)Serial.read();
-// 		uart_data_parse(received_char);
-// 	}
-// }
 void serialEvent() {
-    while (Serial.available()) {
-        // 如果当前正在接收长指令 (uart_mode != 0)，无条件放行所有字符给解析器
-        if (uart_mode != 0) {
-            char received_char = (char)Serial.read();
-            uart_data_parse(received_char);
-            continue;
-        }
-
-        // --------- 以下是 uart_mode == 0 (空闲状态) 的处理 ---------
-        char c = toupper((char)Serial.peek());
-
-        // 1. 如果是回车换行，直接吃掉丢弃，防止污染
-        if (c == '\r' || c == '\n') {
-            Serial.read(); 
-            continue;
-        }
-        
-        // 2. 如果是长指令的前缀，放行给 uart_data_parse 处理
-        if (c == '$' || c == '#' || c == '{' || c == '<' || c == 'H' || c == 'I' || c == 'J' || c == 'Q' || c == 'T') {
-            char received_char = (char)Serial.read();
-            uart_data_parse(received_char);
-        } 
-        // 3. 【核心修复】：如果是合法的单字符指令，绝对不能吃掉！
-        // 直接 break 跳出，把它们安全地留在缓冲区，交给 loop() 里的各个模块慢慢读取
-        else if (c == 'U' || c == 'L' || c == 'K' || c == 'P' || 
-                 c == 'F' || c == 'G' || c == 'M' || c == 'N' || 
-                 c == 'A' || c == 'B' || c == 'W' || c == 'X' || c == 'V' || 
-                 c == 'Z' || c == 'D' || c == 'C' || c == 'O') {
-            break; 
-        }
-        // 4. 如果是其他真正的乱码垃圾字符，直接吃掉丢弃，防止堵塞缓冲区
-        else {
-            Serial.read(); 
-        }
-    }
+	while (Serial.available()) {
+		char received_char = (char)Serial.read();
+		uart_data_parse(received_char);
+	}
 }
 
 void uart_data_parse(char received_char) {
@@ -1056,8 +981,6 @@ void uart_data_parse(char received_char) {
 			case '#': uart_mode = 2; break;
 			case '{': uart_mode = 3; break;  
 			case '<': uart_mode = 4; break;  
-      case 'H': case 'I': case 'J': case 'Q': case 'T': //0330 新增允许的起始符
-        uart_mode = 1; break; // 借用 mode 1 的解析流程
 			default: return;
 		}
 		uart_receive_str = "";

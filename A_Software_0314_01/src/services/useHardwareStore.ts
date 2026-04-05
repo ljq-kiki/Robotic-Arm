@@ -625,6 +625,10 @@ export function saveHardwarePath() {
   sendBridgeCommand('Z')
 }
 
+export function sendAssemblyTeachEnable() {
+  sendBridgeCommand('TEACH_START')
+}
+
 /**
  * 用户�?? UI 上切换坐标系时调�??
  * frame: 'Base' �?? 'Target'

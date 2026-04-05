@@ -1,15 +1,88 @@
+// // BASE + TARGET ｜ 奇异点监控始终在后台运行，每半秒必定计算一次坐标并丢给雷达检查，但只有按了 K 才向外打印普通坐标
+// #include <math.h>
+
+// extern int read_servo_pwm(uint8_t idx, uint32_t timeout_ms);
+// extern uint8_t current_ref_frame;
+// extern const float TARGET_OFFSET_Y;
+
+// // 声明我们在新文件里写的雷达监控函数
+// extern void check_singularity_zone(float current_x, float current_y, float current_z, float current_pitch);
+
+// const float L0 = 109.0, L1 = 105.0, L2 = 87.0, L3_BASE = 80.0;
+// const float END_EFFECTOR_OFFSET = 50.0; 
+
+// void loop_print_tcp() {
+//     static unsigned long last_calc_time = 0;
+//     static bool is_printing = false;
+
+//     // 1. 监听 K 指令，控制普通坐标的打印开关
+//     if (Serial.available() > 0) {
+//         char key = toupper((char)Serial.peek());
+//         if (key == '\n' || key == '\r') {
+//             Serial.read(); 
+//             return;
+//         }
+//         if (key == 'K') {
+//             Serial.read(); 
+//             is_printing = !is_printing;
+//             if (is_printing) Serial.println("\n[System] Real-time coordinates display ON");
+//             else Serial.println("\n[System] Coordinates display OFF");
+//         }
+//     }
+
+//     // 2. 核心修改：无论 is_printing 是真是假，只要过了500ms，就进行一次姿态解算
+//     if (millis() - last_calc_time > 500) {
+//         last_calc_time = millis();
+
+//         float pwm0 = read_servo_pwm(0, 30), pwm1 = read_servo_pwm(1, 30); 
+//         float pwm2 = read_servo_pwm(2, 30), pwm3 = read_servo_pwm(3, 30); 
+
+//         if (pwm0 < 0 || pwm1 < 0 || pwm2 < 0 || pwm3 < 0) return;
+
+//         float theta6 = (1500.0 - pwm0) * 270.0 / 2000.0;
+//         float theta5 = (pwm1 - 1500.0) * 270.0 / 2000.0 + 90.0;
+//         float theta4 = (pwm2 - 1500.0) * 270.0 / 2000.0;
+//         float theta3 = (pwm3 - 1500.0) * 270.0 / 2000.0;
+
+//         float alpha_deg = theta5 - theta4 + theta3;
+//         float t6 = theta6 * PI / 180.0, t5 = theta5 * PI / 180.0, t4 = theta4 * PI / 180.0, alpha = alpha_deg * PI / 180.0;
+
+//         float L3_ACTUAL = L3_BASE + END_EFFECTOR_OFFSET;
+//         float r = L1 * cos(t5) + L2 * cos(t5 - t4) + L3_ACTUAL * cos(alpha);
+        
+//         float z = L0 + L1 * sin(t5) + L2 * sin(t5 - t4) + L3_ACTUAL * sin(alpha);
+//         float x = r * sin(t6), y = r * cos(t6);
+
+//         // --- 核心注入：始终调用奇异点检测函数（必须传入 Base 坐标系下的数据） ---
+//         check_singularity_zone(x, y, z, alpha_deg);
+
+//         // 3. 原来的输出逻辑，受 is_printing 控制
+//         if (is_printing) {
+//             float out_x = x;
+//             float out_y = y;
+//             float out_z = z;
+
+//             if (current_ref_frame == 1) { // 目标坐标系转换
+//                 out_y = y - TARGET_OFFSET_Y;
+//             }
+
+//             Serial.print(">> [Real-time] X: "); Serial.print(out_x, 1);
+//             Serial.print(" mm | Y: "); Serial.print(out_y, 1);
+//             Serial.print(" mm | Z: "); Serial.print(out_z, 1);
+//             Serial.print(" mm | Pitch: ");
+//             Serial.print(alpha_deg, 1);
+//             Serial.println(" deg");
+//         }
+//     }
+// }
+
+
 // ===================== 修改后的 ForwardKinematics.ino =====================
 #include <math.h>
 
 extern int read_servo_pwm(uint8_t idx, uint32_t timeout_ms);
 extern uint8_t current_ref_frame;
-//extern const float TARGET_OFFSET_Y;
-//0331
-extern float target_offset_x;
-extern float target_offset_y;
-extern float target_offset_z;
-extern bool has_end;
-
+extern const float TARGET_OFFSET_Y;
 extern void check_singularity_zone(float current_x, float current_y, float current_z, float current_pitch);
 
 // 物理参数保持不变
@@ -67,14 +140,7 @@ void loop_print_tcp() {
         // 4. 受限打印逻辑
         if (is_printing) {
             float out_x = x, out_y = y, out_z = z;
-            // if (current_ref_frame == 1) out_y = y - TARGET_OFFSET_Y; // 坐标系转换
-            //0331
-            // --- 核心修改：三轴动态补偿，无数值时等同于 Base ---
-            if (current_ref_frame == 1 && has_end) { 
-                out_x = x - target_offset_x;
-                out_y = y - target_offset_y;
-                out_z = z - target_offset_z;
-            }
+            if (current_ref_frame == 1) out_y = y - TARGET_OFFSET_Y; // 坐标系转换
 
             // 输出坐标数据
             Serial.print(">> [Sample "); Serial.print(print_count + 1); Serial.print("/3] ");
@@ -137,28 +203,13 @@ void loop_oneshot_tcp() {
             // 后台奇异点检测 [cite: 117]
             check_singularity_zone(x, y, z, alpha_deg);
 
-            // // 坐标系转换逻辑
-            // float out_x = x, out_y = y, out_z = z;
-            // String frame_name = "BASE";
-
-            // if (use_target_frame_once) {
-            //     out_y = y - TARGET_OFFSET_Y; 
-            //     frame_name = "TARGET";
-            //     use_target_frame_once = false; // 用完即焚
-            // }
-            // 0331 坐标系转换逻辑
+            // 坐标系转换逻辑
             float out_x = x, out_y = y, out_z = z;
             String frame_name = "BASE";
 
             if (use_target_frame_once) {
-                if (has_end) {
-                    out_x = x - target_offset_x;
-                    out_y = y - target_offset_y;
-                    out_z = z - target_offset_z;
-                    frame_name = "TARGET";
-                } else {
-                    frame_name = "TARGET(Unset->BASE)"; // 提示当前无 Drop Point，退化为 Base
-                }
+                out_y = y - TARGET_OFFSET_Y; 
+                frame_name = "TARGET";
                 use_target_frame_once = false; // 用完即焚
             }
 

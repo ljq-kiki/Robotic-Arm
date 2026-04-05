@@ -70,43 +70,13 @@ void loop_emergency_stop() {
 }
 
 // 带检测的特殊延时函数
-// void smart_delay_with_stop(unsigned long ms) {
-//     unsigned long start_time = millis();
-//     while (millis() - start_time < ms) {
-//         loop_emergency_stop(); 
-        
-//         if (digitalRead(PIN_STOP) == HIGH) return;
-        
-//         delay(1); 
-//     }
-// }
-
-// 0404 修改：软件触发急停的函数，供奇异点模块调用
-void trigger_software_emergency(const char* reason) {
-    is_emergency_triggered = true;
-    group_do_ok = 1; 
-
-    // === 核心修复 1：必须先上力恢复扭矩，才能把软趴趴的手臂瞬间冻结在半空中！ ===
-    all_uart_send_str("#255PULR!"); 
-    delay(50); // 给舵机 50 毫秒的反应时间
-    all_uart_send_str("#000PDST!"); // 然后立刻刹车死锁
-    
-    Serial.println("\n==================================================");
-    Serial.print("[SOFTWARE STOP] Triggered by: "); Serial.println(reason);
-    Serial.println("[WARNING] !!! SINGULARITY ZONE DETECTED !!!");
-    Serial.println("SIGNAL:ASSEMBLY_SINGULARITY_REACHED");
-    Serial.println("==================================================");
-}
-
-// 0404 修改 smart_delay_with_stop，确保移动过程中也在监测坐标和奇异点
-extern void loop_print_tcp(); // 引用坐标打印/检测函数
 void smart_delay_with_stop(unsigned long ms) {
     unsigned long start_time = millis();
     while (millis() - start_time < ms) {
         loop_emergency_stop(); 
-        loop_print_tcp(); // <--- 核心修改：在移动的间隙持续计算当前坐标并检测奇异点 [cite: 51, 62]
         
-        if (is_emergency_triggered) return; // 无论是物理还是软件触发，立即跳出延时 [cite: 6]
+        if (digitalRead(PIN_STOP) == HIGH) return;
+        
         delay(1); 
     }
 }

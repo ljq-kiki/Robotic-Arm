@@ -52,9 +52,6 @@
 
 extern void all_uart_send_str(char *str);
 
-// 0404 === 新增：引用电磁铁继电器的引脚 ===
-extern const int RELAY_PIN;
-
 //0324
 extern int current_state;
 extern bool has_start;
@@ -71,71 +68,28 @@ void loop_torque_control() {
         }
         
         key = toupper(key);
-        // if (key == 'U' || key == 'L') {
-        //     Serial.read();
-        //     char lock_cmd[16];
-
-        //     if (key == 'U') {
-        //         Serial.println("\n[指令] 机械臂已卸力 (U) - 示教模式已开启");
-        //         // --- 新增：初始化示教状态 ---
-        //         has_start = false; 
-        //         has_end = false;
-        //         has_w1 = false;
-        //         has_w2 = false;
-        //         current_state = 1; // 设为 STATE_TEACHING (1)
-
-        //         snprintf(lock_cmd, sizeof(lock_cmd), "#255PULK!");
-        //         all_uart_send_str(lock_cmd);
-        //         Serial.println(">>> 状态已重置。请移动机械臂并按 A(起点), B(终点), W(过渡1), X(过渡2)");
-        //     } 
-        //     else if (key == 'L') {
-        //         Serial.println("\n[指令] 机械臂已上力 (L)");
-        //         snprintf(lock_cmd, sizeof(lock_cmd), "#255PULR!");
-        //         all_uart_send_str(lock_cmd);
-        //     }
-        // }
         if (key == 'U' || key == 'L') {
             Serial.read();
             char lock_cmd[16];
 
             if (key == 'U') {
-                Serial.println("\n[指令] 机械臂已卸力 (U) - 允许重新拖拽微调");
-                // --- 核心修改：删除了这里的清空状态代码，只保留模式切换 ---
+                Serial.println("\n[指令] 机械臂已卸力 (U) - 示教模式已开启");
+                // --- 新增：初始化示教状态 ---
+                has_start = false; 
+                has_end = false;
+                has_w1 = false;
+                has_w2 = false;
                 current_state = 1; // 设为 STATE_TEACHING (1)
-
-                // 0404 === 就是加下面这一行！重新武装报警器！ ===
-                is_emergency_triggered = false;
 
                 snprintf(lock_cmd, sizeof(lock_cmd), "#255PULK!");
                 all_uart_send_str(lock_cmd);
-                Serial.println(">>> 仅卸力，不丢失已有记录点位。");
-            } else {
-                Serial.println("\n[指令] 机械臂已锁定 (L)");
-                current_state = 2; 
+                Serial.println(">>> 状态已重置。请移动机械臂并按 A(起点), B(终点), W(过渡1), X(过渡2)");
+            } 
+            else if (key == 'L') {
+                Serial.println("\n[指令] 机械臂已上力 (L)");
                 snprintf(lock_cmd, sizeof(lock_cmd), "#255PULR!");
                 all_uart_send_str(lock_cmd);
             }
-        }
-        // --- 新增：独立的 C 指令，专门用于彻底清空点位记忆 ---
-        else if (key == 'C') {
-            Serial.read();
-            Serial.println("\n[指令] 点位缓存已彻底清空 (C) - 准备全新的示教");
-            has_start = false; 
-            has_end = false;
-            has_w1 = false;
-            has_w2 = false;
-            current_state = 1; 
-        }
-        // 0404=== 核心新增：独立的 M / N 指令，控制电磁铁手动开关 ===
-        else if (key == 'M') {
-            Serial.read();
-            Serial.println("\n[指令] 电磁铁手动上电吸附 (M)");
-            digitalWrite(RELAY_PIN, HIGH);
-        }
-        else if (key == 'N') {
-            Serial.read();
-            Serial.println("\n[指令] 电磁铁手动断电松开 (N)");
-            digitalWrite(RELAY_PIN, LOW);
         }
     }
 }

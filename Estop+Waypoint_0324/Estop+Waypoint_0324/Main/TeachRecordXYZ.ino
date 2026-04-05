@@ -9,7 +9,7 @@ extern void set_servo(int servo_index, int pwm_value, int move_time);
 extern void all_uart_send_str(char *str);
 extern void smart_delay_with_stop(unsigned long ms);
 extern uint8_t current_ref_frame;
-//extern const float TARGET_OFFSET_Y;
+extern const float TARGET_OFFSET_Y;
 extern const int RELAY_PIN; // 引用继电器引脚
 extern bool is_emergency_triggered;
 
@@ -38,27 +38,6 @@ extern bool has_w1;
 extern bool has_w2;
 extern int waypoint_count; // [cite: 341]
 
-//0331
-extern float target_offset_x;
-extern float target_offset_y;
-extern float target_offset_z;
-
-// 0331 新增函数：读取PWM数组并更新 Target 坐标系原点
-void update_target_offsets_from_pwm(int* pwm_array) {
-    float theta6 = (1500.0 - pwm_array[0]) * 270.0 / 2000.0;
-    float theta5 = (pwm_array[1] - 1500.0) * 270.0 / 2000.0 + 90.0;
-    float theta4 = (pwm_array[2] - 1500.0) * 270.0 / 2000.0;
-    float theta3 = (pwm_array[3] - 1500.0) * 270.0 / 2000.0;
-    float alpha_deg = theta5 - theta4 + theta3;
-    
-    float t6 = theta6 * PI / 180.0, t5 = theta5 * PI / 180.0, t4 = theta4 * PI / 180.0, alpha = alpha_deg * PI / 180.0;
-    float r = FK_L1 * cos(t5) + FK_L2 * cos(t5 - t4) + FK_L3_ACTUAL * cos(alpha);
-    
-    target_offset_x = r * sin(t6);
-    target_offset_y = r * cos(t6);
-    target_offset_z = FK_L0 + FK_L1 * sin(t5) + FK_L2 * sin(t5 - t4) + FK_L3_ACTUAL * sin(alpha);
-}
-
 void set_torque_all(const char* cmd_suffix) {
   char cmd[16];
   snprintf(cmd, sizeof(cmd), "#255%s!", cmd_suffix);
@@ -78,16 +57,8 @@ void print_xyz_from_pwm(int* pwm_array) {
     float z = FK_L0 + FK_L1 * sin(t5) + FK_L2 * sin(t5 - t4) + FK_L3_ACTUAL * sin(alpha);
     float x = r * sin(t6), y = r * cos(t6);
 
-    // float out_x = x, out_y = y, out_z = z;
-    // if (current_ref_frame == 1) out_y = y - TARGET_OFFSET_Y;
-    //0331
     float out_x = x, out_y = y, out_z = z;
-    // --- 核心修改：改为三轴动态补偿 ---
-    if (current_ref_frame == 1 && has_end) { 
-        out_x = x - target_offset_x;
-        out_y = y - target_offset_y;
-        out_z = z - target_offset_z;
-    }
+    if (current_ref_frame == 1) out_y = y - TARGET_OFFSET_Y;
 
     Serial.println("--------------------------------------------------");
     Serial.print(" X: "); Serial.print(out_x, 1);
@@ -176,7 +147,7 @@ void loop_teach_record() {
     if (key == '\n' || key == '\r') { Serial.read(); return; }
 
     // 监听 A, B, W, X, V
-    if (key == 'A' || key == 'B' || key == 'W' || key == 'X' || key == 'V' || key == 'O') {
+    if (key == 'A' || key == 'B' || key == 'W' || key == 'X' || key == 'V') {
         Serial.read();
         switch (key) {
           case 'A':
@@ -188,18 +159,10 @@ void loop_teach_record() {
             break;
 
           case 'B':
-            // Serial.println("\n[RECORD] Saving END Point...");
-            // if (read_and_save(final_end_pos)) {
-            //     has_end = true;
-            //     Serial.println("✅ END saved.");
-            // }
-            // break;
-            //0331
             Serial.println("\n[RECORD] Saving END Point...");
             if (read_and_save(final_end_pos)) {
                 has_end = true;
-                update_target_offsets_from_pwm(final_end_pos); // <--- 新增这行，同步更新原点
-                Serial.println("✅ END saved (Target Origin Updated).");
+                Serial.println("✅ END saved.");
             }
             break;
 
@@ -270,49 +233,6 @@ void loop_teach_record() {
                 stop_v:
                 Serial.println("\n⚠️ [Aborted] Sequence interrupted.");
                 digitalWrite(RELAY_PIN, LOW); // 安全第一，断开磁铁
-            } else {
-                Serial.println("❌ Error: Missing START or END points!");
-            }
-            break;
-
-          case 'O': //0401 处理第二块积木碰撞点的路径
-            Serial.println("\n[CMD] Starting Auto Run with OBSTACLE (O)...");
-            if (has_start && has_end) {
-                // 【修复核心】：把数组变量声明移到作用域的最顶部，就不会被 goto 跨越了！
-                // ⚠️ 这是一个固定的碰撞点，请根据你实际的桌面障碍物位置修改这5个PWM值
-                const int HARDCODED_COLLISION_POS[5] = {1500, 1200, 1800, 1500, 1500};
-
-                is_emergency_triggered = false;
-                set_torque_all("PULR"); // 恢复力矩
-                smart_delay_with_stop(500);
-
-                // 1. 移动到起点
-                Serial.println(">>> 1. Moving to START...");
-                for (int i = 0; i < 5; i++) set_servo(i, final_start_pos[i], 2000);
-                smart_delay_with_stop(2500);
-                if (is_emergency_triggered) goto stop_o;
-
-                // 2. 磁吸上电
-                Serial.println(">>> 2. Magnet ON");
-                digitalWrite(RELAY_PIN, HIGH);
-                smart_delay_with_stop(800);
-
-                // 3. 移动到写死的硬件碰撞点
-                Serial.println(">>> 3. Moving to HARDCODED COLLISION POINT...");
-                for (int i = 0; i < 5; i++) set_servo(i, HARDCODED_COLLISION_POS[i], 2000);
-                smart_delay_with_stop(2500);
-                if (is_emergency_triggered) goto stop_o;
-
-                // 4. 到达碰撞点后无限死等，逼迫用户拍下急停按钮
-                Serial.println(">>> ⚠️ Reached Obstacle! System Paused.");
-                Serial.println(">>> Waiting for user to press E-STOP button...");
-                while (!is_emergency_triggered) {
-                    smart_delay_with_stop(50);
-                }
-
-                stop_o:
-                Serial.println("\n⚠️ [Aborted] Sequence interrupted by E-Stop.");
-                digitalWrite(RELAY_PIN, LOW); // 安全断开磁铁
             } else {
                 Serial.println("❌ Error: Missing START or END points!");
             }
