@@ -50,17 +50,22 @@ export function TrajectoryPointCard({
         <button
           type="button"
           onClick={onRemove}
-          className="trajectory-point-card-remove waypoint-pixel-circle-btn waypoint-pixel-circle-btn--remove px"
+          className="trajectory-point-card-remove waypoint-pixel-circle-btn waypoint-pixel-circle-btn--remove waypoint-pixel-circle-btn--img px"
           aria-label={`Remove ${title}`}
         >
-          −
+          <img
+            src="/icons/waypoint-remove.png"
+            alt=""
+            className="waypoint-action-icon waypoint-action-icon--remove"
+            draggable={false}
+          />
         </button>
       )}
 
       <div className="flex-1 flex flex-col gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <span className={`trajectory-point-card-dot ${accentClass}`}>●</span>
-          <span className="text-[13px] font-semibold shrink-0">{title}</span>
+          <span className={`trajectory-point-card-type ${accentClass} shrink-0`}>{title}</span>
           <span className="text-[12px] ml-4 shrink-0">Reference Frame</span>
           <PixelSelect
             className="flex-1 min-w-0"

@@ -57,7 +57,7 @@ function HintModal({
         ) : null}
         <div className="mb-8">
           <div
-            className="testtool-hint-alert px text-[18px] mb-6 flex items-center"
+            className="testtool-hint-alert text-[18px] mb-6 flex items-center"
           >
             <span className="testtool-hint-icon">
               💡
@@ -286,7 +286,7 @@ export function TestToolPageView({
           <div className="testtool-model-stage flex min-h-0 flex-1 flex-col max-lg:flex-none">
             <div className="testtool-model-cover-wrap max-lg:min-h-[min(52vh,340px)]">
               <img
-                src={mediaAssets.robot3dPreview}
+                src="/media/test-robot-3d-preview.png"
                 alt="Robot arm hardware preview"
                 className="testtool-model-cover-img"
               />

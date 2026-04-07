@@ -52,7 +52,7 @@ export function PixelSelect({
             background: 'var(--panel)',
             height: variant === 'default' ? '40px' : '30px',
             padding: '0 10px',
-            borderRadius: variant === 'default' ? '0px' : '4px',
+            borderRadius: variant === 'default' ? '8px' : '8px',
           }}
         >
           <span className={`${CONTROL_TEXT_SIZE_CLASS} leading-none truncate`}>
@@ -69,7 +69,7 @@ export function PixelSelect({
               border: '2px solid var(--ink)',
               boxShadow: 'none',
               background: 'var(--panel)',
-              borderRadius: variant === 'default' ? '0px' : '4px',
+              borderRadius: variant === 'default' ? '8px' : '8px',
               overflow: 'hidden',
             }}
           >

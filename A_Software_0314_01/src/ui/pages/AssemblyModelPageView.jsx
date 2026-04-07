@@ -152,7 +152,7 @@ function CollisionHintModal({
           </div>
         )}
         <div className="mb-8">
-          <div className="assembly-hint-alert px text-[18px] mb-6 flex items-center">
+          <div className="assembly-hint-alert text-[18px] mb-6 flex items-center">
             <span className="assembly-hint-icon">💡</span>
             {visual.alert}
           </div>
@@ -256,7 +256,6 @@ export function AssemblyModelPageView({
   selectedCollisionOption,
   collisionHintType,
   collisionHintStep,
-  showRelativeHintInfo,
   showSuccessModal,
   successPrimaryLabel,
   successSubline = 'NEXT LEVEL UNLOCKED!',
@@ -290,8 +289,22 @@ export function AssemblyModelPageView({
 }) {
   // Keep a unified initial layout across all assembly blocks.
   const showJoggingPanel = false
+  const isSecondBlock = stage === 'second-block'
   const isThirdBlock = stage === 'third-block'
   const confirmButtonLabel = hasSingularityWarning ? 'Reset the robot' : 'Confirm & Test'
+  const showSecondBlockHintEntry = isSecondBlock && hasCollision && !isAssemblyRunning
+  const showSingularityHintEntry = isThirdBlock && hasSingularityWarning && !isAssemblyRunning
+  const showGlobalHintEntry = showSecondBlockHintEntry || showSingularityHintEntry
+  const cardTitle = isThirdBlock
+    ? 'Assemble the third block'
+    : isSecondBlock
+      ? 'Assemble the second block'
+      : 'Assemble the first block'
+  const cardImageSrc = isThirdBlock
+    ? '/media/assembly-lion-hint-third.png'
+    : isSecondBlock
+      ? '/media/assembly-lion-hint-second.png'
+      : '/media/assembly-lion-hint.jpg'
 
   return (
     <PageLayout>
@@ -422,10 +435,15 @@ export function AssemblyModelPageView({
                     <button
                       type="button"
                       onClick={onAddWaypoint}
-                      className="waypoint-pixel-circle-btn waypoint-pixel-circle-btn--add px"
+                      className="waypoint-pixel-circle-btn waypoint-pixel-circle-btn--add waypoint-pixel-circle-btn--img px"
                       aria-label="Add waypoint"
                     >
-                      +
+                      <img
+                        src="/icons/waypoint-add.png"
+                        alt=""
+                        className="waypoint-action-icon waypoint-action-icon--add"
+                        draggable={false}
+                      />
                     </button>
                   </div>
                 )}
@@ -482,81 +500,37 @@ export function AssemblyModelPageView({
         </PixelCard>
 
         <PixelCard
-          title="3D ROBOT MODEL"
+          title={cardTitle}
           titleColor="var(--orange)"
           className="flex min-h-0 max-h-full flex-col overflow-hidden max-lg:max-h-none"
         >
-          <div
-            className="assembly-model-stage flex min-h-0 flex-1 items-center justify-center overflow-y-auto max-lg:min-h-[min(52vh,340px)] max-lg:flex-none"
-          >
-            <div className="relative flex w-full items-center justify-center py-16 max-lg:min-h-min h-full">
-              <div className="text-center">
-                <div className="px text-[16px] mb-2">Lion Model</div>
-                <div className="assembly-muted px text-[12px]">
-                  {isThirdBlock
-                    ? 'Install the third building block'
-                    : 'Install the first building block'}
-                </div>
-                {isThirdBlock && (
-                  <div className="assembly-third-coordinate mt-5">
-                    <div>World</div>
-                    <div>Flange</div>
-                    <div>TCP</div>
-                  </div>
-                )}
-                {showRelativeHintInfo && (
-                  <div className="assembly-relative-box mt-5">
-                    <div className="assembly-relative-title">
-                      Maybe you need add some intermediate waypoint
-                    </div>
-                    <div className="assembly-relative-subtitle">
-                      Highlight the relative offset
-                    </div>
-                    <div className="assembly-relative-lines">
-                      <div>Y: 60mm</div>
-                      <div>Z: 20mm</div>
-                      <div>Y: 20mm</div>
-                    </div>
-                    <div className="assembly-relative-note">
-                      Add intermediate waypoints and align values with selected
-                      reference frame.
-                    </div>
-                  </div>
-                )}
-              </div>
-              {isThirdBlock && hasSingularityWarning && (
-                <div className="assembly-singularity-warning assembly-singularity-warning-top">
+          <div className="assembly-model-stage flex min-h-0 flex-1 overflow-hidden max-lg:min-h-[min(52vh,340px)] max-lg:flex-none">
+            <div
+              className={`assembly-lion-hint-frame flex-1 min-h-0 w-full ${
+                isThirdBlock ? 'assembly-lion-hint-frame--natural' : ''
+              }`}
+            >
+              {showSingularityHintEntry && (
+                <div className="assembly-singularity-top-hint">
                   You can move the block to avoid the singularity on the trajectory.
                 </div>
               )}
-
-              {hasCollision && !isAssemblyRunning && (
+              <img
+                src={cardImageSrc}
+                alt=""
+                className={`assembly-lion-hint-img ${
+                  isThirdBlock ? 'assembly-lion-hint-img--natural' : ''
+                }`}
+                draggable={false}
+              />
+              {showGlobalHintEntry && (
                 <button
                   type="button"
                   onClick={onOpenCollisionHint}
-                  style={{
-                    position: 'absolute',
-                    right: '24px',
-                    bottom: '24px',
-                    width: '60px',
-                    height: '60px',
-                    borderRadius: '9999px',
-                    border: '2px solid var(--ink)',
-                    boxShadow: '4px 4px 0 var(--shadow)',
-                    background: '#FFD5D5',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
+                  className="assembly-collision-hint-fab"
+                  aria-label="Open collision hint"
                 >
-                  <span
-                    style={{
-                      fontSize: '26px',
-                      textShadow: '2px 2px 0 var(--shadow)',
-                    }}
-                  >
-                    💡
-                  </span>
+                  <span className="assembly-collision-hint-fab-icon">💡</span>
                 </button>
               )}
             </div>
