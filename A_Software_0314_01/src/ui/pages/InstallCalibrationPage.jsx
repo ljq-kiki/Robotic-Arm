@@ -112,7 +112,7 @@ export default function InstallCalibrationPage({ onNext }) {
   const handleNextClick = () => {
     if (typeof onNext === 'function') {
       onNext({
-        calibratedPayload: '2kg',
+        calibratedPayload: '0.5kg',
       })
     }
   }
@@ -223,6 +223,7 @@ export default function InstallCalibrationPage({ onNext }) {
                               style={{
                                 border: '2px solid var(--ink)',
                                 background: 'var(--panel)',
+                                borderRadius: '8px',
                                 padding: '6px 10px',
                               }}
                             >
@@ -236,10 +237,11 @@ export default function InstallCalibrationPage({ onNext }) {
                               style={{
                                 border: '2px solid var(--ink)',
                                 background: 'var(--panel)',
+                                borderRadius: '8px',
                                 padding: '6px 10px',
                               }}
                             >
-                              2kg
+                              0.5kg
                             </div>
                           </div>
                         </div>
@@ -255,6 +257,7 @@ export default function InstallCalibrationPage({ onNext }) {
                                   style={{
                                     border: '2px solid var(--ink)',
                                     background: 'var(--panel)',
+                                    borderRadius: '8px',
                                     padding: '6px 10px',
                                   }}
                                 >

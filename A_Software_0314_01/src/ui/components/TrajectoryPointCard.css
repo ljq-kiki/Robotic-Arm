@@ -124,6 +124,11 @@
   line-height: 1;
 }
 
+.trajectory-point-card-type {
+  font-size: 14px;
+  font-weight: 600;
+}
+
 .trajectory-point-card-dot-magenta {
   color: #ff2daa;
 }

@@ -9,11 +9,13 @@ import ExecutionPage from './ExecutionPage.jsx'
  * 开发预览：
  * - ?preview=execution — 直接进入 Execute 主界面（idle）
  * - ?preview=execution-success — 同上，且 ExecutionPage 进入庆祝完成态
+ * - ?preview=assembly-singularity — 直接进入 Assembly 奇异点错误预览
  */
 function getInitialStep() {
   if (import.meta.env.DEV && typeof window !== 'undefined') {
     const q = new URLSearchParams(window.location.search)
     const p = q.get('preview')
+    if (p === 'assembly-singularity') return 'assembly'
     if (p === 'execution' || p === 'execution-success') return 'execution'
   }
   return 'install'
@@ -22,7 +24,7 @@ function getInitialStep() {
 export default function InstallFlowPage() {
   const [step, setStep] = useState(getInitialStep)
   const [calibrationResult, setCalibrationResult] = useState({
-    calibratedPayload: '2kg',
+    calibratedPayload: '0.5kg',
   })
 
   if (step === 'install') {

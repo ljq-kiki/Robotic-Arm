@@ -31,7 +31,7 @@ export function PixelInput({
           boxShadow: 'none',
           background: 'var(--panel)',
           height: variant === 'flat' ? '30px' : '40px',
-          borderRadius: variant === 'flat' ? '4px' : '0px',
+          borderRadius: variant === 'flat' ? '8px' : '8px',
           display: 'flex',
           alignItems: 'center',
         }}

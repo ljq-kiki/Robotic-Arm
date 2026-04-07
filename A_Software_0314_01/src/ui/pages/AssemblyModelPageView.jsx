@@ -152,7 +152,7 @@ function CollisionHintModal({
           </div>
         )}
         <div className="mb-8">
-          <div className="assembly-hint-alert px text-[18px] mb-6 flex items-center">
+          <div className="assembly-hint-alert text-[18px] mb-6 flex items-center">
             <span className="assembly-hint-icon">💡</span>
             {visual.alert}
           </div>
@@ -289,8 +289,22 @@ export function AssemblyModelPageView({
 }) {
   // Keep a unified initial layout across all assembly blocks.
   const showJoggingPanel = false
+  const isSecondBlock = stage === 'second-block'
   const isThirdBlock = stage === 'third-block'
   const confirmButtonLabel = hasSingularityWarning ? 'Reset the robot' : 'Confirm & Test'
+  const showSecondBlockHintEntry = isSecondBlock && hasCollision && !isAssemblyRunning
+  const showSingularityHintEntry = isThirdBlock && hasSingularityWarning && !isAssemblyRunning
+  const showGlobalHintEntry = showSecondBlockHintEntry || showSingularityHintEntry
+  const cardTitle = isThirdBlock
+    ? 'Assemble the third block'
+    : isSecondBlock
+      ? 'Assemble the second block'
+      : 'Assemble the first block'
+  const cardImageSrc = isThirdBlock
+    ? '/media/assembly-lion-hint-third.png'
+    : isSecondBlock
+      ? '/media/assembly-lion-hint-second.png'
+      : '/media/assembly-lion-hint.jpg'
 
   return (
     <PageLayout>
@@ -486,19 +500,30 @@ export function AssemblyModelPageView({
         </PixelCard>
 
         <PixelCard
-          title="Lion Model_Assemble the first block"
+          title={cardTitle}
           titleColor="var(--orange)"
           className="flex min-h-0 max-h-full flex-col overflow-hidden max-lg:max-h-none"
         >
           <div className="assembly-model-stage flex min-h-0 flex-1 overflow-hidden max-lg:min-h-[min(52vh,340px)] max-lg:flex-none">
-            <div className="assembly-lion-hint-frame flex-1 min-h-0 w-full">
+            <div
+              className={`assembly-lion-hint-frame flex-1 min-h-0 w-full ${
+                isThirdBlock ? 'assembly-lion-hint-frame--natural' : ''
+              }`}
+            >
+              {showSingularityHintEntry && (
+                <div className="assembly-singularity-top-hint">
+                  You can move the block to avoid the singularity on the trajectory.
+                </div>
+              )}
               <img
-                src="/media/assembly-lion-hint.jpg"
+                src={cardImageSrc}
                 alt=""
-                className="assembly-lion-hint-img"
+                className={`assembly-lion-hint-img ${
+                  isThirdBlock ? 'assembly-lion-hint-img--natural' : ''
+                }`}
                 draggable={false}
               />
-              {hasCollision && !isAssemblyRunning && (
+              {showGlobalHintEntry && (
                 <button
                   type="button"
                   onClick={onOpenCollisionHint}

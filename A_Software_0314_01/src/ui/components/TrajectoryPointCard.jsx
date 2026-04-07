@@ -65,7 +65,7 @@ export function TrajectoryPointCard({
       <div className="flex-1 flex flex-col gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <span className={`trajectory-point-card-dot ${accentClass}`}>●</span>
-          <span className="text-[13px] font-semibold shrink-0">{title}</span>
+          <span className={`trajectory-point-card-type ${accentClass} shrink-0`}>{title}</span>
           <span className="text-[12px] ml-4 shrink-0">Reference Frame</span>
           <PixelSelect
             className="flex-1 min-w-0"

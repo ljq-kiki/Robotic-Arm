@@ -44,6 +44,10 @@ function isPointFilled(point) {
   return point.x !== '' && point.y !== '' && point.z !== '' && point.rx !== ''
 }
 
+function isRecordedPoint(point) {
+  return isPointFilled(point) && point.isManual === false
+}
+
 export default function AssemblyModelPage({ onGoExecution }) {
   const hardware = useHardwareStore()
   const [mode, setMode] = useState('pick')
@@ -78,8 +82,12 @@ export default function AssemblyModelPage({ onGoExecution }) {
   const waypointCountRef = useRef(waypoints.length)
 
   const canConfirm = isPointFilled(grab) && isPointFilled(drop)
-  const requiresRecordedPoints = stage !== 'first-block'
-  const canConfirmNow = requiresRecordedPoints ? canConfirm : true
+  const canConfirmFirstBlock = isRecordedPoint(grab) && isRecordedPoint(drop)
+  const canConfirmNow = hasSingularityWarning
+    ? true
+    : stage === 'first-block'
+      ? canConfirmFirstBlock
+      : canConfirm
   const connectionInfo = `${
     hardware.connection === 'connected'
       ? 'Connected'
@@ -227,6 +235,22 @@ export default function AssemblyModelPage({ onGoExecution }) {
       }
       setIsRunningPreview(false)
     }
+  }, [])
+
+  useEffect(() => {
+    if (!import.meta.env.DEV || typeof window === 'undefined') return
+    const q = new URLSearchParams(window.location.search)
+    if (q.get('preview') !== 'assembly-singularity') return
+
+    setStage('third-block')
+    setMode('pick')
+    setHasCollision(true)
+    setShowCollisionToast(true)
+    setShowCollisionHintModal(true)
+    setSelectedCollisionOption(null)
+    setCollisionHintType('singularity')
+    setCollisionHintStep(1)
+    setHasSingularityWarning(true)
   }, [])
   
 
@@ -535,13 +559,24 @@ export default function AssemblyModelPage({ onGoExecution }) {
     waitingSingularityHardwareSignalRef.current = false
     if (hasSingularityWarning) {
       void resetMockRobotToHome()
+      // Keep the user in third-block, but restore this block to initial state.
+      setMode('pick')
+      setGrab(EMPTY_POINT)
+      setGrabFrame('Base')
+      setDrop(EMPTY_POINT)
+      setDropFrame('Base')
+      setWaypoints([])
+      setNextId(1)
       setHasSingularityWarning(false)
       setHasCollision(false)
       setShowCollisionToast(false)
       setShowWrongAnswerToast(false)
       setShowCollisionHintModal(false)
       setSelectedCollisionOption(null)
+      setCollisionHintType('waypoint')
+      setCollisionHintStep(1)
       setIsAutomaticReassemblyReady(true)
+      startAssemblyTeachMode()
       return
     }
 
