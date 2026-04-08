@@ -43,7 +43,7 @@ export default function ExecutionPage({ onRestartGame }) {
       : hardware.connection === 'error'
         ? 'Error'
         : 'Disconnected'
-  } 路 ${hardware.source === 'hardware' ? 'Real' : 'Virtual'}`
+  } ?? ${hardware.source === 'hardware' ? 'Real' : 'Virtual'}`
   const [phase, setPhase] = useState(getInitialPhase) // idle | running | paused-danger | success
   const [progress, setProgress] = useState(0)
   const [dangerWarning, setDangerWarning] = useState(false)
@@ -80,7 +80,7 @@ export default function ExecutionPage({ onRestartGame }) {
   useEffect(() => {
     const cleanupHardware = initializeHardwareStore()
     
-    // === 核心新增：挂载雷达，死等底层的完成信号 ===
+    // === ?????????????????????????????? ===
     const unsubscribeSignal = subscribeHardwareSignal((rawSignal) => {
       if (
         waitingExecutionFinishRef.current && 
@@ -88,21 +88,21 @@ export default function ExecutionPage({ onRestartGame }) {
       ) {
         waitingExecutionFinishRef.current = false
         clearRunTimers()
-        setProgress(1) // 进度条瞬间拉满
-        setPhase('success') // 切入成功动画
+        setProgress(1) // ?????????????
+        setPhase('success') // ??????????
         setDangerWarning(false)
       }
 
-        //0406 === 核心新增：2. 监听到底层触发了急停，立刻打断 UI 的死等状态 ===
+        //0406 === ??????????2. ??????????????????????? UI ???????? ===
       if (
         waitingExecutionFinishRef.current && 
         rawSignal === 'RAW_ESTOP_TRIGGERED'
       ) {
         waitingExecutionFinishRef.current = false
-        clearRunTimers() // 关掉那 90 秒的倒计时和进度条动画
-        setProgress(0)  // 进度清零
-        setPhase('idle') // 强制退回初始闲置状态，"Run the Program" 按钮会重新显示
-        setDangerWarning(true) // 顺便让下方的危险提示亮起
+        clearRunTimers() // ????? 90 ??????????????????
+        setProgress(0)  // ????????
+        setPhase('idle') // ????????????????"Run the Program" ????????????
+        setDangerWarning(true) // ??????????????????????
       }
     })
     
@@ -151,19 +151,19 @@ export default function ExecutionPage({ onRestartGame }) {
     setDangerWarning(false)
     setProgress(0)
 
-    // 1. 发送 D 指令，机械臂真正跑起来！
+    // 1. ???? D ?????????????????????
     hardware.startExecutionBatch()
     waitingExecutionFinishRef.current = true
 
-    // 2. 模拟前端进度条动画 (假进度，一直走到 98% 就停下等信号)
+    // 2. ??????????????? (??????????? 98% ?????????)
     const startedAt = Date.now()
     progressIntervalRef.current = window.setInterval(() => {
       const elapsed = Date.now() - startedAt
-      // 假设跑完三块积木大约需要 35 秒，让进度条慢慢走
+      // ???????????????????? 35 ???????????????
       setProgress(Math.min(0.98, elapsed / 35000))
     }, 120)
 
-    // 3. 极限防卡死保底 (删除了原本的 5.2 秒死板结束和 2.3 秒假警告)
+    // 3. ????????????? (?????????? 5.2 ??????????? 2.3 ??????)
     completeTimeoutRef.current = window.setTimeout(() => {
       if (waitingExecutionFinishRef.current) {
          waitingExecutionFinishRef.current = false
@@ -172,7 +172,7 @@ export default function ExecutionPage({ onRestartGame }) {
          setPhase('success')
          setDangerWarning(false)
       }
-    }, 90000) // 90秒超时兜底
+    }, 90000) // 90???????
   }
 
   if (phase === 'success') {
@@ -238,23 +238,43 @@ export default function ExecutionPage({ onRestartGame }) {
           className="flex min-h-0 max-h-full flex-col overflow-hidden max-lg:max-h-none"
         >
           <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto max-lg:min-h-min max-lg:flex-none max-lg:overflow-visible">
-            <div className="execution-title px text-[24px]">Debugging complete!</div>
-            <div className="execution-paragraph text-[18px] leading-[1.35]">
-              Reset the blocks, then run the robot in automatic mode to finish the
-              full assembly.
+            <div className="execution-title px text-[24px]">Automated Block Assembly</div>
+            <div className="execution-paragraph-row">
+              <span className="execution-inline-icon execution-inline-icon-brick" aria-hidden="true">
+                <img
+                  src={mediaAssets.blockBrickIcon}
+                  alt=""
+                  className="execution-inline-icon-image"
+                />
+              </span>
+              <div className="execution-paragraph text-[18px] leading-[1.35]">
+                Reset the blocks, then run the robot in automatic mode to finish the
+                full assembly.
+              </div>
             </div>
-            <div className="execution-paragraph text-[18px] leading-[1.35]">
-              Don&apos;t forget hold you E-stop button in hand while is running, and
-              stay away from the danger area.
+            <div className="execution-paragraph-row">
+              <span className="execution-inline-icon" aria-hidden="true">
+                <img
+                  src={mediaAssets.emergencyStopIcon}
+                  alt=""
+                  className="execution-inline-icon-image"
+                />
+              </span>
+              <div className="execution-paragraph text-[18px] leading-[1.35]">
+                <span className="execution-emphasis">Hold the E-stop button</span> while
+                running, and <span className="execution-emphasis">stay away</span> from
+                the danger area.
+              </div>
             </div>
 
-            <div className="execution-danger-map">
+            <div className="execution-decoration-box" aria-hidden="true">
               <img
-                src={mediaAssets.executionWarningMapClean}
-                alt="Warning area and singularity map"
-                className="execution-danger-image"
+                src={mediaAssets.emergencyStopIcon}
+                alt=""
+                className="execution-decoration-image"
               />
             </div>
+
           </div>
 
           <div className="mt-4 flex items-center gap-4">
@@ -279,15 +299,15 @@ export default function ExecutionPage({ onRestartGame }) {
         </PixelCard>
 
         <PixelCard
-          title="3D ROBOT MODEL"
+          title="Robot Workspace"
           titleColor="var(--orange)"
           className="flex min-h-0 max-h-full flex-col overflow-hidden max-lg:max-h-none"
         >
-          <div className="assembly-model-stage execution-model-card-stage flex min-h-0 flex-1 flex-col overflow-hidden max-lg:min-h-[min(52vh,340px)] max-lg:flex-none">
+          <div className="assembly-model-stage execution-model-card-stage execution-workspace-stage flex min-h-0 flex-1 flex-col overflow-hidden max-lg:min-h-[min(52vh,340px)] max-lg:flex-none">
             <div className="execution-model-dashed-inner">
               <img
-                src={mediaAssets.lionVoxelAutoRun}
-                alt="Lion voxel model"
+                src={mediaAssets.robotWorkspaceMap}
+                alt="Robot workspace map"
                 className="execution-card-model-image"
               />
             </div>

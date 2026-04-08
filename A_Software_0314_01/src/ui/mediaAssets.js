@@ -29,8 +29,14 @@ export const mediaAssets = {
   /** @deprecated 使用 <CelebrationImage />，保留路径供检索 */
   assemblyCelebrationGif: '/media/all-games-celebration.gif',
 
-  /** Execute 页右侧「3D ROBOT MODEL」虚线框内：体素狮子，居中 cover 裁剪 */
-  lionVoxelAutoRun: '/media/lion-voxel-auto-run.png',
+  /** Execute 页右侧卡片：Robot Workspace 示意图 */
+  robotWorkspaceMap: '/placeholders/robot-workspace-map.png',
+
+  /** Execute 页 E-stop 图标（指令项与装饰图共用） */
+  emergencyStopIcon: '/icons/emergency-stop.png',
+
+  /** Execute 页第一条提示的积木图标 */
+  blockBrickIcon: '/icons/block-brick.png',
 
   /** Execute 页安全区域示意图 */
   executionWarningMapClean: '/placeholders/execution-warning-map-clean.png',

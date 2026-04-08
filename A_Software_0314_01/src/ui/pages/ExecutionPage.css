@@ -21,6 +21,57 @@
   font-weight: 600;
 }
 
+.execution-emphasis {
+  color: var(--magenta);
+}
+
+.execution-paragraph-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.execution-inline-icon {
+  width: 45px;
+  flex: 0 0 45px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 45px;
+}
+
+.execution-inline-icon-brick {
+  width: 38px;
+  flex-basis: 38px;
+  min-height: 38px;
+}
+
+.execution-inline-icon-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.execution-decoration-box {
+  margin-top: 8px;
+  width: min(420px, 88%);
+  min-height: 250px;
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.execution-decoration-image {
+  display: block;
+  max-width: 100%;
+  max-height: 250px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
 .execution-danger-map {
   margin-top: 10px;
   width: min(560px, 100%);
@@ -160,6 +211,10 @@
 
 .execution-model-card-stage {
   position: relative;
+}
+
+.execution-workspace-stage {
+  border: none;
 }
 
 /* 虚线框内铺满、居中，超出裁剪 */
