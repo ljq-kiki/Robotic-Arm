@@ -197,9 +197,8 @@ export function TestToolPageView({
           className="flex min-h-0 max-h-full flex-col overflow-hidden max-lg:max-h-none"
         >
           <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pr-6 pb-6 max-lg:min-h-min max-lg:flex-none max-lg:overflow-visible">
-            <div className="testtool-intro px text-[13px]">
-              Check your tool, pick up the teddy bear, and complete the tool test to
-              begin the game.
+            <div className="testtool-intro font-sans text-[20px] leading-[1.2] font-bold">
+              Check your tool, complete the tool test to begin the game.
             </div>
 
             <div className="flex flex-col gap-3">
