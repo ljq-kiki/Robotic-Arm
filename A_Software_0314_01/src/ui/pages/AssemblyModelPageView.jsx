@@ -10,6 +10,7 @@ import { TrajectoryPointCard } from '../components/TrajectoryPointCard.jsx'
 import { CelebrationImage } from '../components/CelebrationImage.jsx'
 import { ResetArmButton } from '../components/ResetArmButton.jsx'
 import { ConnectionStatusLabel } from '../components/ConnectionStatusLabel.jsx'
+import { mediaAssets } from '../mediaAssets.js'
 import '../components/TrajectoryPointCard.css'
 import './AssemblyModelPageView.css'
 
@@ -54,11 +55,13 @@ function CollisionHintModal({
   const isDirectionStepOne = hintType === 'direction' && hintStep === 1
   const isDirectionStepTwo = hintType === 'direction' && hintStep === 2
   const isSingularityHint = hintType === 'singularity'
+  const isWaypointHint = hintType === 'waypoint'
+  const useCompactHintIllustration = isWaypointHint || isDirectionStepOne || isDirectionStepTwo
   const primaryLabel = isDirectionStepOne ? 'NEXT' : 'Confirm'
   const visual =
-    hintType === 'waypoint'
+    isWaypointHint
       ? {
-          alert: 'Collision occurred! Try to add more waypoints to avoid colliding with objects',
+          alert: 'Collision occurred! Try to add more waypoints',
           lines: [
             'The TCP moves smoothly from one recorded point to the next',
             'With too few waypoints, the trajectory cannot avoid objects between the points',
@@ -78,14 +81,18 @@ function CollisionHintModal({
             ],
             illustrationTitle: 'Two jogging styles',
             caption:
-              '"Place at center" and "move forward by 10 cm" may end at the same point, but use different frames.',
+              '"Place the cup at the center of the table" and "Move the cup forward by 10 cm" may look the same - but they are defined in different reference frames.',
           }
         : isDirectionStepTwo
           ? {
-              alert: 'What should you do when the robot moves quickly in an unexpected direction?',
+              alert: 'In case of emergency, press the E-stop immediately.',
               lines: [
-                'Press the E-stop button immediately',
-                'The robot will cut power and stop moving',
+                <>
+                  Press the <span className="assembly-emphasis-magenta">E-stop</span> button immediately
+                </>,
+                <>
+                  The robot will <span className="assembly-emphasis-magenta">cut power and stop</span> moving
+                </>,
                 'After fixing the issue, restart and move it away manually',
               ],
               illustrationTitle: 'E-STOP button',
@@ -113,7 +120,7 @@ function CollisionHintModal({
           label: 'C. The robot lost motion capability in certain directions',
         },
       ]
-    : hintType === 'waypoint'
+    : isWaypointHint
       ? [
           { value: 'A', label: 'A. It replays the demonstrated path exactly' },
           {
@@ -139,10 +146,25 @@ function CollisionHintModal({
             { value: 'B', label: 'B. Pausing is slower' },
             { value: 'C', label: 'C. Pausing resets the robot' },
           ]
+  const questionText =
+    hintType === 'waypoint'
+      ? 'Question: How does the robot follow a planned trajectory during execution?'
+      : isDirectionStepOne
+        ? 'Question: Why did the point move to a completely different position?'
+        : isDirectionStepTwo
+          ? 'Question: Why is pressing E-stop necessary instead of just pausing the program?'
+          : 'Question: Why does the robot stop moving at a singularity?'
+  const hintIllustrationImage = isWaypointHint
+    ? mediaAssets.waypointDrivingAroundRock
+    : isDirectionStepOne
+      ? mediaAssets.assemblyDirectionReferenceFrame
+    : isDirectionStepTwo
+      ? mediaAssets.assemblyEstopButton
+      : mediaAssets.assemblySingularityWarning
 
   return (
     <div className="assembly-hint-overlay fixed inset-0 z-50 flex items-center justify-center">
-      <div className="assembly-hint-modal pixel-card soft-grid p-10">
+      <div className="assembly-hint-modal pixel-card soft-grid px-10 pb-10 pt-7">
         {showWrongAnswerToast && (
           <div
             className="assembly-wrong-answer-toast px text-[12px]"
@@ -152,12 +174,22 @@ function CollisionHintModal({
           </div>
         )}
         <div className="mb-8">
-          <div className="assembly-hint-alert text-[18px] mb-6 flex items-center">
-            <span className="assembly-hint-icon">💡</span>
+          <div className="assembly-hint-alert text-[28px] font-bold mb-6 flex items-center">
+            <span className="assembly-hint-icon">
+              <img
+                src={mediaAssets.hintBulbIcon}
+                alt=""
+                className="assembly-hint-icon-image"
+              />
+            </span>
             {visual.alert}
           </div>
 
-          <div className="flex justify-between items-start gap-8">
+          <div
+            className={`flex justify-between gap-8 ${
+              useCompactHintIllustration ? 'items-stretch' : 'items-start'
+            } ${isSingularityHint ? 'assembly-hint-layout--singularity' : ''}`}
+          >
             <div className="flex-1">
               <div className="assembly-hint-copy text-[20px] flex flex-col items-center gap-2 text-center">
                 <div>{visual.lines[0]}</div>
@@ -174,12 +206,37 @@ function CollisionHintModal({
               </div>
             </div>
 
-            <div className="assembly-hint-illustration pixel-card soft-grid">
-              <div className="flex flex-col w-full h-full">
-                <div className="flex-1 overflow-hidden flex items-center justify-center mb-2">
+            <div
+              className={`assembly-hint-illustration pixel-card soft-grid ${
+                useCompactHintIllustration ? 'assembly-hint-illustration--waypoint' : ''
+              } ${isSingularityHint ? 'assembly-hint-illustration--singularity' : ''}`}
+            >
+              <div className={`assembly-hint-illustration-body flex flex-col w-full h-full ${useCompactHintIllustration ? 'assembly-hint-illustration-body--waypoint' : ''}`}>
+                <div className={`assembly-hint-illustration-media-slot overflow-hidden flex items-center justify-center mb-2 ${useCompactHintIllustration ? 'assembly-hint-illustration-media-slot--waypoint' : ''}`}>
                   <div className={`w-full h-full flex flex-col items-center justify-center text-center ${isSingularityHint ? 'assembly-singularity-illustration' : ''}`}>
-                    <div className="text-[28px] mb-3">Illustration</div>
-                    <div className="text-[26px]">{visual.illustrationTitle}</div>
+                    {hintIllustrationImage && (
+                      <div className="assembly-hint-waypoint-frame">
+                        <img
+                          src={hintIllustrationImage}
+                          alt={
+                            isDirectionStepTwo
+                              ? 'E-stop button'
+                              : isDirectionStepOne
+                                ? 'Reference frame comparison'
+                                : isWaypointHint
+                                  ? 'Driving around a rock'
+                                  : 'Robot singularity warning'
+                          }
+                          className="assembly-hint-waypoint-image"
+                        />
+                      </div>
+                    )}
+                    {!hintIllustrationImage && (
+                      <>
+                        <div className="text-[28px] mb-3">Illustration</div>
+                        <div className="text-[26px]">{visual.illustrationTitle}</div>
+                      </>
+                    )}
                   </div>
                 </div>
                 <div className="assembly-hint-caption text-[13px]">
@@ -192,15 +249,15 @@ function CollisionHintModal({
 
         <div className="assembly-hint-divider mb-4" />
 
-        <div className="text-[24px] mb-4">
-          {hintType === 'waypoint' &&
-            '🤔 Question: How does the robot follow a planned trajectory during execution?'}
-          {isDirectionStepOne &&
-            '🤔 Question: Why did the point move to a completely different position?'}
-          {isDirectionStepTwo &&
-            '🤔 Question: Why is pressing E-stop necessary instead of just pausing the program?'}
-          {isSingularityHint &&
-            '🤔 Question: Why does the robot stop moving at a singularity?'}
+        <div className="text-[20px] mb-4 flex items-center gap-2">
+          <span className="assembly-hint-question-icon">
+            <img
+              src={mediaAssets.hintThinkingIcon}
+              alt=""
+              className="assembly-hint-question-icon-image"
+            />
+          </span>
+          {questionText}
         </div>
 
         <div className="space-y-3 text-[14px]">
@@ -300,6 +357,7 @@ export function AssemblyModelPageView({
     : isSecondBlock
       ? 'Assemble the second block'
       : 'Assemble the first block'
+  const cardSequenceNumber = isThirdBlock ? '3' : isSecondBlock ? '2' : '1'
   const cardImageSrc = isThirdBlock
     ? '/media/assembly-lion-hint-third.png'
     : isSecondBlock
@@ -502,6 +560,7 @@ export function AssemblyModelPageView({
         <PixelCard
           title={cardTitle}
           titleColor="var(--orange)"
+          titleBadgeText={cardSequenceNumber}
           className="flex min-h-0 max-h-full flex-col overflow-hidden max-lg:max-h-none"
         >
           <div className="assembly-model-stage flex min-h-0 flex-1 overflow-hidden max-lg:min-h-[min(52vh,340px)] max-lg:flex-none">

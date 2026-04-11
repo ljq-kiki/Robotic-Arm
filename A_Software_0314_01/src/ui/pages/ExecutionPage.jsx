@@ -191,18 +191,15 @@ export default function ExecutionPage({ onRestartGame }) {
         <div className="execution-success-screen">
           <div className="execution-success-card">
             <div className="execution-success-panel">
+              <div className="execution-success-copy">
+                <div className="execution-success-title px">Congratulations!</div>
+              </div>
               <CelebrationImage
                 frameClassName="execution-success-dashed-frame"
                 imageClassName="execution-success-celebration-gif"
                 alt=""
                 adaptAspect
               />
-              <div className="execution-success-copy">
-                <div className="execution-success-title px">Congratulations!</div>
-                <div className="execution-success-subtitle px">
-                  You finished every mission!
-                </div>
-              </div>
             </div>
           </div>
           <PixelButton
@@ -248,8 +245,8 @@ export default function ExecutionPage({ onRestartGame }) {
                 />
               </span>
               <div className="execution-paragraph text-[18px] leading-[1.35]">
-                Reset the blocks, then run the robot in automatic mode to finish the
-                full assembly.
+                <span className="execution-emphasis">Reset the blocks</span>, then run
+                the robot in automatic mode to finish the full assembly.
               </div>
             </div>
             <div className="execution-paragraph-row">

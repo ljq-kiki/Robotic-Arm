@@ -219,7 +219,7 @@ export default function InstallCalibrationPage({ onNext }) {
                           <div className="flex items-center gap-2">
                             <div className="px shrink-0 text-[8px] leading-tight">Name</div>
                             <div
-                              className="text-[11px] flex-1 min-w-0"
+                              className="text-[13px] flex-1 min-w-0 text-left"
                               style={{
                                 border: '2px solid var(--ink)',
                                 background: 'var(--panel)',
@@ -233,7 +233,7 @@ export default function InstallCalibrationPage({ onNext }) {
                           <div className="flex items-center gap-2">
                             <div className="px shrink-0 text-[8px] leading-tight">Payload</div>
                             <div
-                              className="text-[11px] flex-1 min-w-0"
+                              className="text-[13px] flex-1 min-w-0 text-left"
                               style={{
                                 border: '2px solid var(--ink)',
                                 background: 'var(--panel)',
@@ -253,7 +253,7 @@ export default function InstallCalibrationPage({ onNext }) {
                               <div key={axis} className="flex items-center gap-2 min-w-0">
                                 <div className="text-[12px]">{axis}</div>
                                 <div
-                                  className="text-[11px] text-center flex-1 min-w-0"
+                                  className="text-[13px] text-left flex-1 min-w-0"
                                   style={{
                                     border: '2px solid var(--ink)',
                                     background: 'var(--panel)',

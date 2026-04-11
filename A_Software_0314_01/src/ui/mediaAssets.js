@@ -14,7 +14,7 @@ export const mediaAssets = {
   ],
 
   /** Test 页碰撞提示弹窗里的示意图 */
-  toolTestHintIllustration: '/placeholders/chopsticks-illustration.svg',
+  toolTestHintIllustration: '/placeholders/chopsticks-illustration.png',
 
   /**
    * 庆祝动图路径（浏览器对 GIF 会自动循环）。
@@ -38,6 +38,24 @@ export const mediaAssets = {
   /** Execute 页第一条提示的积木图标 */
   blockBrickIcon: '/icons/block-brick.png',
 
+  /** 弹窗提示：灯泡图标 */
+  hintBulbIcon: '/icons/hint-bulb.png',
+
+  /** 弹窗问题：思考图标 */
+  hintThinkingIcon: '/icons/hint-thinking.png',
+
   /** Execute 页安全区域示意图 */
   executionWarningMapClean: '/placeholders/execution-warning-map-clean.png',
+
+  /** Assembly 少路径点提示弹窗里的道路绕障示意图 */
+  waypointDrivingAroundRock: '/placeholders/waypoint-driving-around-rock.png',
+
+  /** Assembly E-stop 提示弹窗里的按钮示意图 */
+  assemblyEstopButton: '/placeholders/assembly-estop-button.png',
+
+  /** Assembly 坐标系错误提示弹窗里的参考系示意图 */
+  assemblyDirectionReferenceFrame: '/placeholders/assembly-direction-reference-frame.png',
+
+  /** Assembly 奇异点提示弹窗里的警告示意图 */
+  assemblySingularityWarning: '/placeholders/assembly-singularity-warning.png',
 }

@@ -45,7 +45,7 @@ function HintModal({
       className="testtool-hint-overlay fixed inset-0 z-50 flex items-center justify-center"
     >
       <div
-        className="testtool-hint-modal pixel-card soft-grid p-10"
+        className="testtool-hint-modal pixel-card soft-grid px-10 pb-10 pt-7"
       >
         {showWrongAnswerToast ? (
           <div
@@ -57,15 +57,19 @@ function HintModal({
         ) : null}
         <div className="mb-8">
           <div
-            className="testtool-hint-alert text-[18px] mb-6 flex items-center"
+            className="testtool-hint-alert text-[28px] font-bold mb-6 flex items-center"
           >
             <span className="testtool-hint-icon">
-              💡
+              <img
+                src={mediaAssets.hintBulbIcon}
+                alt=""
+                className="testtool-hint-icon-image"
+              />
             </span>
             Collision occurred! Check the tool before you run.
           </div>
 
-          <div className="flex justify-between items-start gap-8">
+          <div className="flex justify-between items-stretch gap-8">
             <div className="flex-1">
               <div
                 className="testtool-hint-copy text-[20px] flex flex-col items-center gap-2 text-center"
@@ -88,7 +92,7 @@ function HintModal({
               className="testtool-hint-illustration pixel-card soft-grid"
             >
               <div className="flex flex-col w-full h-full">
-                <div className="flex-1 overflow-hidden flex items-center justify-center mb-2">
+                <div className="testtool-hint-image-frame overflow-hidden flex items-center justify-center mb-2">
                   <img
                     className="testtool-hint-image"
                     src={mediaAssets.toolTestHintIllustration}
@@ -96,9 +100,8 @@ function HintModal({
                   />
                 </div>
                 <div className="testtool-hint-caption text-[13px]">
-                  You practiced eating with long chopsticks. When it&apos;s time to
-                  eat, you forget you&apos;re holding them and try to grab food by hand
-                  - the chopsticks crash straight into the plate.
+                  It&apos;s like you&apos;re holding chopsticks, but your brain thinks
+                  you&apos;re not - so your actions don&apos;t match reality.
                 </div>
               </div>
             </div>
@@ -107,9 +110,13 @@ function HintModal({
 
         <div className="mt-6">
           <div className="testtool-hint-divider mb-4" />
-          <div className="testtool-hint-question text-[15px] mb-4">
+          <div className="testtool-hint-question text-[11px] mb-4">
             <span className="testtool-hint-question-icon">
-              🤔
+              <img
+                src={mediaAssets.hintThinkingIcon}
+                alt=""
+                className="testtool-hint-question-icon-image"
+              />
             </span>
             Question: Why does a mismatch between the tool configuration and the
             physical tool lead to collisions?
@@ -244,16 +251,6 @@ export function TestToolPageView({
               </div>
             </div>
 
-            <div className="testtool-placeholder-card mt-4 pixel-card soft-grid">
-              <div className="w-full h-full flex items-center justify-center">
-                <div className="text-center">
-                  <div className="px text-[12px] mb-2">GIF PLACEHOLDER</div>
-                  <div className="testtool-placeholder-caption text-[10px]">
-                    Grab the teddy bear · Highlight the TCP
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
 
           <div className="shrink-0 mt-6 w-full">
@@ -267,7 +264,7 @@ export function TestToolPageView({
             ) : (
               <PixelButton
                 variant="magenta"
-                className="w-full py-4 text-[12px]"
+                className="w-full py-4 text-[14px]"
                 onClick={onPrimaryAction}
                 icon={isSuccess ? '🎉' : undefined}
               >

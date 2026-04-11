@@ -240,17 +240,45 @@ export default function AssemblyModelPage({ onGoExecution }) {
   useEffect(() => {
     if (!import.meta.env.DEV || typeof window === 'undefined') return
     const q = new URLSearchParams(window.location.search)
-    if (q.get('preview') !== 'assembly-singularity') return
+    const preview = q.get('preview')
 
-    setStage('third-block')
-    setMode('pick')
-    setHasCollision(true)
-    setShowCollisionToast(true)
-    setShowCollisionHintModal(true)
-    setSelectedCollisionOption(null)
-    setCollisionHintType('singularity')
-    setCollisionHintStep(1)
-    setHasSingularityWarning(true)
+    if (preview === 'assembly-singularity') {
+      setStage('third-block')
+      setMode('pick')
+      setHasCollision(true)
+      setShowCollisionToast(true)
+      setShowCollisionHintModal(true)
+      setSelectedCollisionOption(null)
+      setCollisionHintType('singularity')
+      setCollisionHintStep(1)
+      setHasSingularityWarning(true)
+      return
+    }
+
+    if (preview === 'assembly-estop') {
+      setStage('second-block')
+      setMode('pick')
+      setHasCollision(true)
+      setShowCollisionToast(true)
+      setShowCollisionHintModal(true)
+      setSelectedCollisionOption(null)
+      setCollisionHintType('direction')
+      setCollisionHintStep(2)
+      setHasSingularityWarning(false)
+      return
+    }
+
+    if (preview === 'assembly-direction') {
+      setStage('second-block')
+      setMode('pick')
+      setHasCollision(true)
+      setShowCollisionToast(true)
+      setShowCollisionHintModal(true)
+      setSelectedCollisionOption(null)
+      setCollisionHintType('direction')
+      setCollisionHintStep(1)
+      setHasSingularityWarning(false)
+    }
   }, [])
   
 

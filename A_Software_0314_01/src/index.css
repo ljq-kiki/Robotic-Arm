@@ -98,6 +98,12 @@ body{
   box-shadow: 3px 3px 0 var(--shadow);
 }
 
+.swatch-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+}
+
 .connection-pill {
   border: 2px solid var(--ink);
   box-shadow: 3px 3px 0 var(--shadow);
@@ -327,15 +333,18 @@ body{
 
 @keyframes pixel-running-bar {
   0% {
-    transform: translateX(-60%);
+    transform: scaleX(0);
+    transform-origin: left center;
   }
   100% {
-    transform: translateX(0%);
+    transform: scaleX(1);
+    transform-origin: left center;
   }
 }
 
 .running-bar {
   animation: pixel-running-bar 1.2s infinite linear;
+  will-change: transform;
 }
 
 /* 像素风 Radio Button */

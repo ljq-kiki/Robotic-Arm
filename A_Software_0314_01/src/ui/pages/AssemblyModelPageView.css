@@ -50,7 +50,7 @@
 
 .assembly-running-fill {
   height: 100%;
-  width: 42%;
+  width: 100%;
   background: #a5ffb5;
   position: absolute;
   left: 0;
@@ -103,12 +103,13 @@
 
 .assembly-singularity-top-hint {
   position: absolute;
-  top: 9px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 0;
+  left: 0;
+  right: 0;
   z-index: 3;
-  width: calc(100% - 32px);
-  max-width: 640px;
+  width: 100%;
+  box-sizing: border-box;
+  background: #ffd9e8;
   color: #d91f2b;
   font-weight: 700;
   font-size: 15px;
@@ -253,7 +254,7 @@
 }
 
 .assembly-singularity-illustration {
-  border: 3px solid #2f99dc;
+  border: none;
 }
 
 .assembly-hint-overlay {
@@ -287,20 +288,44 @@
 }
 
 .assembly-hint-alert {
-  color: #ff3b3b;
+  color: var(--magenta);
 }
 
 .assembly-hint-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transform: translateY(-2px) scale(1.5);
+  transform: translateY(-1px);
   transform-origin: center;
   margin-right: 10px;
 }
 
+.assembly-hint-icon-image {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
 .assembly-hint-copy {
   color: var(--ink);
+}
+
+.assembly-emphasis-magenta {
+  color: var(--magenta);
+}
+
+.assembly-hint-question-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.assembly-hint-question-icon-image {
+  width: 39px;
+  height: 39px;
+  object-fit: contain;
+  image-rendering: pixelated;
 }
 
 .assembly-hint-arrow {
@@ -314,6 +339,69 @@
   background: #fff;
   display: flex;
   padding: 12px;
+}
+
+.assembly-hint-layout--singularity {
+  gap: 20px;
+}
+
+.assembly-hint-illustration--singularity {
+  width: 380px;
+  height: 300px;
+  flex: 0 0 380px;
+}
+
+.assembly-hint-illustration--waypoint {
+  width: 400px;
+  height: auto;
+  min-height: 0;
+  align-self: stretch;
+}
+
+.assembly-hint-illustration-media-slot {
+  flex: 1;
+}
+
+.assembly-hint-illustration-body--waypoint {
+  height: auto;
+}
+
+.assembly-hint-illustration-media-slot--waypoint {
+  flex: 0 0 auto;
+}
+
+.assembly-hint-waypoint-frame {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  max-height: 170px;
+  flex: 0 0 auto;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.assembly-hint-waypoint-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  margin-bottom: 0;
+}
+
+/* Singularity card: scale image proportionally and fill blue frame area. */
+.assembly-singularity-illustration .assembly-hint-waypoint-frame {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  aspect-ratio: auto;
+}
+
+.assembly-singularity-illustration .assembly-hint-waypoint-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
 }
 
 .assembly-hint-caption {
