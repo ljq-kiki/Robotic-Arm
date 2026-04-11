@@ -352,17 +352,21 @@ export function AssemblyModelPageView({
   const showSecondBlockHintEntry = isSecondBlock && hasCollision && !isAssemblyRunning
   const showSingularityHintEntry = isThirdBlock && hasSingularityWarning && !isAssemblyRunning
   const showGlobalHintEntry = showSecondBlockHintEntry || showSingularityHintEntry
+  const showDirectionErrorFigure =
+    collisionHintType === 'direction' && hasCollision && !isAssemblyRunning
   const cardTitle = isThirdBlock
     ? 'Assemble the third block'
     : isSecondBlock
       ? 'Assemble the second block'
       : 'Assemble the first block'
   const cardSequenceNumber = isThirdBlock ? '3' : isSecondBlock ? '2' : '1'
-  const cardImageSrc = isThirdBlock
-    ? '/media/assembly-lion-hint-third.png'
-    : isSecondBlock
-      ? '/media/assembly-lion-hint-second.png'
-      : '/media/assembly-lion-hint.jpg'
+  const cardImageSrc = showDirectionErrorFigure
+    ? mediaAssets.assemblyDirectionErrorFigure
+    : isThirdBlock
+      ? '/media/assembly-lion-hint-third.png'
+      : isSecondBlock
+        ? '/media/assembly-lion-hint-second.png'
+        : '/media/assembly-lion-hint.jpg'
 
   return (
     <PageLayout>
@@ -579,7 +583,7 @@ export function AssemblyModelPageView({
                 alt=""
                 className={`assembly-lion-hint-img ${
                   isThirdBlock ? 'assembly-lion-hint-img--natural' : ''
-                }`}
+                } ${showDirectionErrorFigure ? 'assembly-lion-hint-img--direction-error' : ''}`}
                 draggable={false}
               />
               {showGlobalHintEntry && (

@@ -101,6 +101,11 @@
   object-fit: contain;
 }
 
+.assembly-lion-hint-img--direction-error {
+  object-fit: contain;
+  background: #000;
+}
+
 .assembly-singularity-top-hint {
   position: absolute;
   top: 0;

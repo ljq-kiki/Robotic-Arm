@@ -56,6 +56,9 @@ export const mediaAssets = {
   /** Assembly 坐标系错误提示弹窗里的参考系示意图 */
   assemblyDirectionReferenceFrame: '/placeholders/assembly-direction-reference-frame.png',
 
+  /** Assembly 坐标系错误发生后，右侧主卡片替换插图 */
+  assemblyDirectionErrorFigure: '/placeholders/assembly-direction-error-figure.png',
+
   /** Assembly 奇异点提示弹窗里的警告示意图 */
   assemblySingularityWarning: '/placeholders/assembly-singularity-warning.png',
 }
